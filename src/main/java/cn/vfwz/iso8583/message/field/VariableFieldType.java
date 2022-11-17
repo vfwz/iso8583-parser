@@ -50,10 +50,10 @@ public class VariableFieldType extends Iso8583FieldType {
                 lengthBytesCount = 1;
                 break;
             case LLLVAR:
-                lengthBytesCount = 1;
+                lengthBytesCount = 2;
                 break;
             case LLLLVAR:
-                lengthBytesCount = 2;
+                lengthBytesCount = 3;
                 break;
             default:
                 throw new Iso8583Exception("暂不支持的域长类型[" + this.fieldLengthType + "]");

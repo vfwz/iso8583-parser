@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -109,8 +108,6 @@ public class Iso8583MessageFactory {
      * <p>将一个不包括消息长度的byte[]格式的消息报文转换成为一个Iso8583Message对象</p>
      */
     public Iso8583Message parseWithoutMsgLength(byte[] data) {
-        //创建一个新的Iso8583Message对象
-        Iso8583Message message = new Iso8583Message(this);
         ByteArrayInputStream destIs = new ByteArrayInputStream(data);
         try {
             /*
@@ -135,13 +132,13 @@ public class Iso8583MessageFactory {
                 if ("0".equals(String.valueOf(strByteBitmap.charAt(fieldIndex)))) {
                     continue;
                 }
-                builder.setField(getFieldType(fieldIndex).decodeField(destIs));
+                builder.setField(getFieldType(fieldIndex + 1).decodeField(destIs));
             }
+            return builder.build();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return message;
-
+        return null;
     }
 
 }

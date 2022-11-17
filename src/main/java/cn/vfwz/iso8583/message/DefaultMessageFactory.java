@@ -38,7 +38,7 @@ public class DefaultMessageFactory {
                 .set(new FixedFieldType(TPDU, 10, BCD))
                 .set(new FixedFieldType(HEAD, 12, BCD))
                 .set(new FixedFieldType(MTI, 4, BCD))
-                .set(new FixedFieldType(BITMAP, 16, BCD))
+                .set(new FixedFieldType(BITMAP, 8, HEX))
                 .set(new FixedFieldType(F3, 6, BCD))
                 .set(new FixedFieldType(F4, 6, BCD, AlignType.RIGHT))
                 .set(new FixedFieldType(F11, 6, BCD))

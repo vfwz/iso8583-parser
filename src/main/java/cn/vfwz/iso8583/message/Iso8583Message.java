@@ -101,6 +101,7 @@ public class Iso8583Message {
 
     private void refreshBitMap() {
         for (Iso8583Field field : fields.values()) {
+            if(field.getIndex() < 1) continue;
             bitmap[field.getIndex() -1] = 1;
         }
     }
@@ -114,7 +115,7 @@ public class Iso8583Message {
             msgLength += field.getLengthHex().length()/2 + field.getValueHex().length()/2;
         }
         Iso8583Field msgLengthField = this.factory.getFieldType(FieldIndex.MSG_LENGTH).encodeField(Integer.toHexString(msgLength));
-        this.updateField(msgLengthField);
+//        this.updateField(msgLengthField);
     }
 
     /**
