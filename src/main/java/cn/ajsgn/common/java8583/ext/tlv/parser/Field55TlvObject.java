@@ -15,76 +15,77 @@
  */
 package cn.ajsgn.common.java8583.ext.tlv.parser;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-
 import cn.ajsgn.common.java8583.ext.tlv.TlvObject;
 import cn.ajsgn.common.java8583.ext.tlv.TlvValue;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+
 /**
  * <p>Iso8583报文55域对象抽象</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: Field55TlvObject
  * @Description: Iso8583报文55域对象抽象
- * @author Ajsgn@foxmail.com
  * @date 2017年8月19日 下午11:53:11
  */
-class Field55TlvObject implements TlvObject{
-	
-	/**
-	 * 对象内容体
-	 */
-	LinkedHashMap<String, TlvValue> me = new LinkedHashMap<String, TlvValue>();
-	
-	/**
-	 * 构造函数
-	 */
-	Field55TlvObject(LinkedHashMap<String, TlvValue> values){
-		this.me = values;
-	}
+class Field55TlvObject implements TlvObject {
 
-	@Override
-	public String toLocalString() {
-		StringBuilder sb = new StringBuilder();
-		for(TlvValue value:values()){
-			sb.append(value.toLocalString());
-		}
-		return sb.toString();
-	}
+    /**
+     * 对象内容体
+     */
+    LinkedHashMap<String, TlvValue> me = new LinkedHashMap<String, TlvValue>();
 
-	@Override
-	public boolean contains(String tagName) {
-		return me.containsKey(tagName);
-	}
+    /**
+     * 构造函数
+     */
+    Field55TlvObject(LinkedHashMap<String, TlvValue> values) {
+        this.me = values;
+    }
 
-	@Override
-	public TlvValue get(String tagName) {
-		return me.get(tagName);
-	}
+    @Override
+    public String toLocalString() {
+        StringBuilder sb = new StringBuilder();
+        for (TlvValue value : values()) {
+            sb.append(value.toLocalString());
+        }
+        return sb.toString();
+    }
 
-	@Override
-	public LinkedList<TlvValue> values() {
-		return new LinkedList<TlvValue>(me.values());
-	}
+    @Override
+    public boolean contains(String tagName) {
+        return me.containsKey(tagName);
+    }
 
-	@Override
-	public TlvObject put(TlvValue tlvValue) {
-		if(null != tlvValue && tlvValue instanceof Field55TlvValue){
-			me.put(tlvValue.getTagName(), tlvValue);
-		}
-		return this;
-	}
+    @Override
+    public TlvValue get(String tagName) {
+        return me.get(tagName);
+    }
 
-	@Override
-	public TlvObject remove(TlvValue tlvValue) {
-		if(null != tlvValue && tlvValue instanceof Field55TlvValue){
-			me.remove(tlvValue.getTagName());
-		}
-		return this;
-	}
+    @Override
+    public LinkedList<TlvValue> values() {
+        return new LinkedList<TlvValue>(me.values());
+    }
 
-	@Override
-	public String toString() {
-		return "Field55TlvObject [me=" + me + "]";
-	}
-	
+    @Override
+    public TlvObject put(TlvValue tlvValue) {
+        if (null != tlvValue && tlvValue instanceof Field55TlvValue) {
+            me.put(tlvValue.getTagName(), tlvValue);
+        }
+        return this;
+    }
+
+    @Override
+    public TlvObject remove(TlvValue tlvValue) {
+        if (null != tlvValue && tlvValue instanceof Field55TlvValue) {
+            me.remove(tlvValue.getTagName());
+        }
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "Field55TlvObject [me=" + me + "]";
+    }
+
 }

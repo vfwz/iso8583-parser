@@ -22,39 +22,42 @@ import cn.ajsgn.common.java8583.field.Iso8583FieldType;
  * <p>如果同一个字段，在不同的消息中有不同的数据格式，则无法保证Iso8583Factory使用单例模式，同时也意味着，开发者要维护多个factory对象，并要建立调用映射关系。</p>
  * <p>为了保证可以使Iso8583Factory保证单例运行，避免开发建立抵用映射，故添加该接口</p>
  * <p>当然，如果是做全接口开发，可能会出现涵盖不了的情况，如果是这样，还是请创建多个facotry实例，确保安全</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: SpecialFieldHandler
  * @Description: 用于对字段提供特殊处理的接口抽象
- * @author Ajsgn@foxmail.com
  * @date 2017年6月29日 下午3:45:26
  */
 public interface SpecialField {
-	
-	/**
-	 * <p>做parse()解析报文时的特殊处理</p>
-	 * @Title: forParse
-	 * @Description: 解析报文时的特殊处理
-	 * @param data 当前字段的数据内容
-	 * @param fieldType 当前字段配置的字段类型
-	 * @param mti 当前消息类型
-	 * @param factory 解析工厂
-	 * @return SpecialFieldHandleResult 处理结果
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年6月29日 下午3:48:27
-	 */
-	public abstract Iso8583FieldType.FieldTypeValue forParse(Iso8583FieldType fieldType,String mti);
-	
-	/**
-	 * <p>当做getBytes()时的特殊处理</p>
-	 * @Title: forGetBytes
-	 * @Description: 当做getBytes()时的特殊处理
-	 * @param data 当前字段的数据内容
-	 * @param fieldType 当前字段配置的字段类型
-	 * @param mti 当前消息类型
-	 * @param factory 解析工厂
-	 * @return SpecialFieldHandleResult 处理结果
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年6月29日 下午3:50:53
-	 */
-	public abstract Iso8583FieldType.FieldTypeValue forGetBytes(Iso8583FieldType fieldType,String mti);
-	
+
+    /**
+     * <p>做parse()解析报文时的特殊处理</p>
+     *
+     * @param data      当前字段的数据内容
+     * @param fieldType 当前字段配置的字段类型
+     * @param mti       当前消息类型
+     * @param factory   解析工厂
+     * @return SpecialFieldHandleResult 处理结果
+     * @Title: forParse
+     * @Description: 解析报文时的特殊处理
+     * @author Ajsgn@foxmail.com
+     * @date 2017年6月29日 下午3:48:27
+     */
+	Iso8583FieldType.FieldTypeValue forParse(Iso8583FieldType fieldType, String mti);
+
+    /**
+     * <p>当做getBytes()时的特殊处理</p>
+     *
+     * @param data      当前字段的数据内容
+     * @param fieldType 当前字段配置的字段类型
+     * @param mti       当前消息类型
+     * @param factory   解析工厂
+     * @return SpecialFieldHandleResult 处理结果
+     * @Title: forGetBytes
+     * @Description: 当做getBytes()时的特殊处理
+     * @author Ajsgn@foxmail.com
+     * @date 2017年6月29日 下午3:50:53
+     */
+	Iso8583FieldType.FieldTypeValue forGetBytes(Iso8583FieldType fieldType, String mti);
+
 }

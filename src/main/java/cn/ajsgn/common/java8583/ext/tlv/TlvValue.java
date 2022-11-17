@@ -18,51 +18,56 @@ package cn.ajsgn.common.java8583.ext.tlv;
 /**
  * <p>TLV对象中每一段数据的抽象</p>
  * <p>不可变类</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: TlvValue
  * @Description: TLV对象中每一段数据的抽象
- * @author Ajsgn@foxmail.com
  * @date 2017年8月19日 下午11:49:36
  */
 public interface TlvValue {
-	
-	/**
-	 * <p>获取字段名称</p>
-	 * @Title: getTagName
-	 * @Description: 获取字段名称
-	 * @return String 字段名称
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月19日 下午11:50:10
-	 */
-	public String getTagName();
-	
-	/**
-	 * <p>获取字段长度</p>
-	 * @Title: getTagLength
-	 * @Description: 获取字段长度
-	 * @return int 字段长度
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月19日 下午11:50:56
-	 */
-	public int getTagLength();
-	
-	/**
-	 * <p>获取字段值</p>
-	 * @Title: getTagValue
-	 * @Description: 获取字段值
-	 * @return String 字段值
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月19日 下午11:51:25
-	 */
-	public String getTagValue();
-	
-	/**
-	 * <p>子字段的本地化展示结果，即转换为报文后的结果</p>
-	 * @Title: toLocalString
-	 * @Description: 子字段的报文转换结果
-	 * @return String 转换结果
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月19日 下午11:51:51
-	 */
-	public String toLocalString();
-	
+
+    /**
+     * <p>获取字段名称</p>
+     *
+     * @return String 字段名称
+     * @Title: getTagName
+     * @Description: 获取字段名称
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月19日 下午11:50:10
+     */
+    String getTagName();
+
+    /**
+     * <p>获取字段长度</p>
+     *
+     * @return int 字段长度
+     * @Title: getTagLength
+     * @Description: 获取字段长度
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月19日 下午11:50:56
+     */
+    int getTagLength();
+
+    /**
+     * <p>获取字段值</p>
+     *
+     * @return String 字段值
+     * @Title: getTagValue
+     * @Description: 获取字段值
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月19日 下午11:51:25
+     */
+    String getTagValue();
+
+    /**
+     * <p>子字段的本地化展示结果，即转换为报文后的结果</p>
+     *
+     * @return String 转换结果
+     * @Title: toLocalString
+     * @Description: 子字段的报文转换结果
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月19日 下午11:51:51
+     */
+    String toLocalString();
+
 }

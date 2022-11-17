@@ -17,58 +17,60 @@ package cn.ajsgn.common.java8583.field;
 
 /**
  * <p>消息头报文类型声明类</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: Iso8583DataHeader
  * @Description: 消息头报文类型声明类
- * @author Ajsgn@foxmail.com
  * @date 2017年3月23日 下午12:42:18
  */
 public class Iso8583DataHeader {
-	
-	/**
-	 * <p>tpdu 消息头类型</p>
-	 */
-	private Iso8583FieldType tpduType;
-	/**
-	 * <p>header tpdu后的字段的消息类型</p>
-	 */
-	private Iso8583FieldType headerType;
-	/**
-	 * <p>mti 的消息类型</p>
-	 */
-	private Iso8583FieldType mtiType;
-	/**
-	 * <p>bitmap 的消息类型</p>
-	 */
-	private Iso8583FieldType bitmapType;
-	
-	/**
-	 * <p>构造函数</p> 
-	 * @param tpduType tpduType
-	 * @param headerType headerType
-	 * @param mtiType mitType
-	 * @param bitmapType bitmapType
-	 */
-	public Iso8583DataHeader(Iso8583FieldType tpduType, Iso8583FieldType headerType, Iso8583FieldType mtiType, Iso8583FieldType bitmapType) {
-		this.tpduType = tpduType;
-		this.headerType = headerType;
-		this.mtiType = mtiType;
-		this.bitmapType = bitmapType;
-	}
-	
-	public Iso8583FieldType getTpduType() {
-		return tpduType;
-	}
-	
-	public Iso8583FieldType getHeaderType() {
-		return headerType;
-	}
 
-	public Iso8583FieldType getMtiType() {
-		return mtiType;
-	}
+    /**
+     * <p>tpdu 消息头类型</p>
+     */
+    private final Iso8583FieldType tpduType;
+    /**
+     * <p>header tpdu后的字段的消息类型</p>
+     */
+    private final Iso8583FieldType headerType;
+    /**
+     * <p>mti 的消息类型</p>
+     */
+    private final Iso8583FieldType mtiType;
+    /**
+     * <p>bitmap 的消息类型</p>
+     */
+    private final Iso8583FieldType bitmapType;
 
-	public Iso8583FieldType getBitmapType() {
-		return bitmapType;
-	}
-	
+    /**
+     * <p>构造函数</p>
+     *
+     * @param tpduType   tpduType
+     * @param headerType headerType
+     * @param mtiType    mitType
+     * @param bitmapType bitmapType
+     */
+    public Iso8583DataHeader(Iso8583FieldType tpduType, Iso8583FieldType headerType, Iso8583FieldType mtiType, Iso8583FieldType bitmapType) {
+        this.tpduType = tpduType;
+        this.headerType = headerType;
+        this.mtiType = mtiType;
+        this.bitmapType = bitmapType;
+    }
+
+    public Iso8583FieldType getTpduType() {
+        return tpduType;
+    }
+
+    public Iso8583FieldType getHeaderType() {
+        return headerType;
+    }
+
+    public Iso8583FieldType getMtiType() {
+        return mtiType;
+    }
+
+    public Iso8583FieldType getBitmapType() {
+        return bitmapType;
+    }
+
 }

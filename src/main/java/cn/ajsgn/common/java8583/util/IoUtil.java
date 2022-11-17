@@ -20,27 +20,29 @@ import java.io.InputStream;
 
 /**
  * <p>Io读取工具类</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: IoUtil
  * @Description: Io读取工具类
- * @author Ajsgn@foxmail.com
  * @date 2017年8月20日 上午12:09:31
  */
 public class IoUtil {
-	
-	/**
-	 * <p>读取一段数据内容</p>
-	 * @Title: read
-	 * @Description: 读取一段数据内容
-	 * @param is 数据来源
-	 * @param length 读取长度
-	 * @return byte[] 读取数据结果
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月20日 上午12:10:07
-	 */
-	public static byte[] read(InputStream is,int length) throws IOException{
-		byte[] bs = new byte[length];
-		is.read(bs);
-		return bs;
-	}
-	
+
+    /**
+     * <p>读取一段数据内容</p>
+     *
+     * @param is     数据来源
+     * @param length 读取长度
+     * @return byte[] 读取数据结果
+     * @Title: read
+     * @Description: 读取一段数据内容
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月20日 上午12:10:07
+     */
+    public static byte[] read(InputStream is, int length) throws IOException {
+        byte[] bs = new byte[length];
+        is.read(bs);
+        return bs;
+    }
+
 }

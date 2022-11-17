@@ -20,25 +20,27 @@ import cn.ajsgn.common.java8583.ext.tlv.TlvValue;
 /**
  * <p>TlvVlue做了包访问限制，使用者不需要关注实现，调用不依赖实现</p>
  * <p>如果需要做写入动作，创建对象需要通过该工厂类来创建</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: TlvValueFactory
  * @Description: 用于创建TlvValue对象的Factory类
- * @author Ajsgn@foxmail.com
  * @date 2017年8月20日 上午10:36:35
  */
 public class TlvValueFactory {
-	
-	/**
-	 * 创建一个55域值对象
-	 * @Title: field55TlvValueInstance
-	 * @Description: 创建一个55域值对象
-	 * @param tagName 域key
-	 * @param tagValue 域值
-	 * @return TlvValue 返回构建结果对象
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月20日 上午10:40:04
-	 */
-	public static TlvValue field55TlvValueInstance(String tagName,String tagValue){
-		return new Field55TlvValue(tagName, tagValue);
-	}
-	
+
+    /**
+     * 创建一个55域值对象
+     *
+     * @param tagName  域key
+     * @param tagValue 域值
+     * @return TlvValue 返回构建结果对象
+     * @Title: field55TlvValueInstance
+     * @Description: 创建一个55域值对象
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月20日 上午10:40:04
+     */
+    public static TlvValue field55TlvValueInstance(String tagName, String tagValue) {
+        return new Field55TlvValue(tagName, tagValue);
+    }
+
 }

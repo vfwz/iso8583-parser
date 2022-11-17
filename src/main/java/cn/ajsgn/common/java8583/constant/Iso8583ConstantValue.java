@@ -17,38 +17,39 @@ package cn.ajsgn.common.java8583.constant;
 
 /**
  * 消息头常量表示
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: Iso8583ConstantValue
  * @Description: 消息头常量表示
- * @author Ajsgn@foxmail.com
  * @date 2017年3月23日 下午12:45:59
  */
 public enum Iso8583ConstantValue {
-	
-	/**
-	 * TPDU
-	 */
-	TPDU("TPDU"),
-	/**
-	 * MTI
-	 */
-	MTI("MTI"),
-	/**
-	 * BITMAP
-	 */
-	BITMAP("BITMAP"),
-	/**
-	 * HEADER
-	 */
-	HEADER("HEADER");
-	
-	private String value = "";
-	
-	private Iso8583ConstantValue(String value){
-		this.value = value;
-	}
-	
-	public String getValue(){
-		return value;
-	}
-	
+
+    /**
+     * TPDU
+     */
+    TPDU("TPDU"),
+    /**
+     * MTI
+     */
+    MTI("MTI"),
+    /**
+     * BITMAP
+     */
+    BITMAP("BITMAP"),
+    /**
+     * HEADER
+     */
+    HEADER("HEADER");
+
+    private String value = "";
+
+    Iso8583ConstantValue(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
 }

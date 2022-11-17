@@ -17,21 +17,21 @@ package cn.ajsgn.common.java8583.ext.tlv.parser;
 
 /**
  * <p>解析器类型枚举</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: TlvParserType
  * @Description: 解析器类型枚举
- * @author Ajsgn@foxmail.com
  * @date 2017年8月20日 上午12:08:08
  */
 public enum TlvParserType {
-	
-	/**
-	 * 右4bit为1的55域解析器对象
-	 */
-	ISO8583_FIELD_55_VERSION4,
-	/**
-	 * 右5bit为1的55域解析器对象
-	 */
-	ISO8583_FIELD_55_VERSION5,
-	;
-	
+
+    /**
+     * 右4bit为1的55域解析器对象
+     */
+    ISO8583_FIELD_55_VERSION4,
+    /**
+     * 右5bit为1的55域解析器对象
+     */
+    ISO8583_FIELD_55_VERSION5,
+
 }

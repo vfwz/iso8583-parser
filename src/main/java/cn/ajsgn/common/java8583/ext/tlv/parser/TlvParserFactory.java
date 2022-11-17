@@ -19,30 +19,32 @@ import cn.ajsgn.common.java8583.ext.tlv.TlvParser;
 
 /**
  * <p>Tlv字段解析器工厂</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: TlvParserFactory
  * @Description: Tlv字段解析器工厂
- * @author Ajsgn@foxmail.com
  * @date 2017年8月20日 上午12:06:30
  */
 public class TlvParserFactory {
-	
-	/**
-	 * <p>获取字段解析器</p>
-	 * @Title: forTlvParse
-	 * @Description: 获取一个字段解析器
-	 * @param type 字段解析器类型
-	 * @return TlvParser 解析器对象
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月20日 上午12:07:03
-	 */
-	public static TlvParser forTlvParse(TlvParserType type){
-		Iso8583Filed55Parser parser = null;
-		if(TlvParserType.ISO8583_FIELD_55_VERSION4 == type){
-			parser = Iso8583Filed55Parser.version4();
-		}else if(TlvParserType.ISO8583_FIELD_55_VERSION5 == type){
-			parser = Iso8583Filed55Parser.version5();
-		}
-		return parser;
-	}
-	
+
+    /**
+     * <p>获取字段解析器</p>
+     *
+     * @param type 字段解析器类型
+     * @return TlvParser 解析器对象
+     * @Title: forTlvParse
+     * @Description: 获取一个字段解析器
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月20日 上午12:07:03
+     */
+    public static TlvParser forTlvParse(TlvParserType type) {
+        Iso8583Filed55Parser parser = null;
+        if (TlvParserType.ISO8583_FIELD_55_VERSION4 == type) {
+            parser = Iso8583Filed55Parser.version4();
+        } else if (TlvParserType.ISO8583_FIELD_55_VERSION5 == type) {
+            parser = Iso8583Filed55Parser.version5();
+        }
+        return parser;
+    }
+
 }

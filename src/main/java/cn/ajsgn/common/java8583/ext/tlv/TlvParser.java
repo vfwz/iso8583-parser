@@ -17,22 +17,24 @@ package cn.ajsgn.common.java8583.ext.tlv;
 
 /**
  * <p>TLV字段解析器</p>
+ *
+ * @author Ajsgn@foxmail.com
  * @ClassName: TlvParser
  * @Description: TLV字段解析器
- * @author Ajsgn@foxmail.com
  * @date 2017年8月19日 下午11:47:46
  */
 public interface TlvParser {
-	
-	/**
-	 * <p>将一个字符串数据内容解析成一个TlvObject对象</p>
-	 * @Title: tlvParse
-	 * @Description: 将一个字符串数据内容解析成一个TlvObject对象
-	 * @param data 需要被解析的数据
-	 * @return TlvObject 解析结果
-	 * @author Ajsgn@foxmail.com
-	 * @date 2017年8月19日 下午11:48:13
-	 */
-	public TlvObject tlvParse(String data);
-	
+
+    /**
+     * <p>将一个字符串数据内容解析成一个TlvObject对象</p>
+     *
+     * @param data 需要被解析的数据
+     * @return TlvObject 解析结果
+     * @Title: tlvParse
+     * @Description: 将一个字符串数据内容解析成一个TlvObject对象
+     * @author Ajsgn@foxmail.com
+     * @date 2017年8月19日 下午11:48:13
+     */
+    TlvObject tlvParse(String data);
+
 }
