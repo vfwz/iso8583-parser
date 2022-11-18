@@ -50,8 +50,8 @@ public class Iso8583Message {
     public void updateValue(int index, String value) {
         Iso8583FieldType type = factory.getFieldType(index);
         putField(type.encodeField(value));
-        refreshMsgLength();
         refreshBitMap();
+        refreshMsgLength();
     }
 
     public void removeField(int index) {
