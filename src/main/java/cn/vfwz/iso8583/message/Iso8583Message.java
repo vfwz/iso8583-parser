@@ -22,7 +22,7 @@ public class Iso8583Message {
     /**
      * <p>当前报文所对应的一个bitmap 64/128 域规范由本身持有的factory.isBit128()方法决定</p>
      */
-    private byte[] bitmap = null;
+    private byte[] bitmap;
     private Map<Integer, Iso8583Field> fields = new TreeMap<>();
 
     /**
@@ -34,7 +34,7 @@ public class Iso8583Message {
         }
         this.factory = factory;
         bitmap = new byte[64];
-        bitmap[0] = 1;
+//        bitmap[0] = 1;
     }
 
     public void refresh(Map<Integer, Iso8583Field> fields) {
@@ -50,39 +50,39 @@ public class Iso8583Message {
      */
     public void updateValue(int index, String value) {
         Iso8583FieldType type = factory.getFieldType(index);
-        updateField(type.encodeField(value));
-    }
-
-    public void removeField(Iso8583Field field) {
-        factory.getFieldType(field.getIndex()); // 确保该Index配置存在
-        //将数据填入map，已处理填充位数据
-        fields.remove(field.getIndex());
-        //位图标记
+        putField(type.encodeField(value));
         refreshMsgLength();
         refreshBitMap();
     }
 
-    public void updateField(Iso8583Field field) {
-        factory.getFieldType(field.getIndex()); // 确保该Index配置存在
+    public void removeField(int index) {
+        //将数据填入map，已处理填充位数据
+        if (fields.containsKey(index)) {
+            fields.remove(index);
+            //位图标记
+            refreshMsgLength();
+            refreshBitMap();
+        }
+    }
+
+    private void putField(Iso8583Field field) {
         //将数据填入map，已处理填充位数据
         fields.put(field.getIndex(), field);
-        //位图标记
-        refreshMsgLength();
-        refreshBitMap();
     }
+
 
     /**
      * <p>获取报文中的某个域的值</p>
      * <p>不关注填充内容，获取到的结果值中不包含填充内容</p>
      */
-    public Iso8583Field getValue(int index) {
-        return fields.get(index);
+    public String getValue(int index) {
+        Iso8583Field field = fields.get(index);
+        return field == null ? null : field.getValue();
     }
 
     /**
      * <p>返回bitmap的位图内容</p>
      * <p>返回值示例：0110000000111100000000001000000100001010110100001000110000010001</p>
-     *
      */
     public String getBitmapBitString() {
         StringBuilder sb = new StringBuilder();
@@ -99,23 +99,26 @@ public class Iso8583Message {
         return EncodeUtil.binary(getBitmapBitString());
     }
 
-    private void refreshBitMap() {
-        for (Iso8583Field field : fields.values()) {
-            if(field.getIndex() < 1) continue;
-            bitmap[field.getIndex() -1] = 1;
-        }
-    }
-
     private void refreshMsgLength() {
         int msgLength = 0;
         for (Iso8583Field field : fields.values()) {
             if (field.getIndex() == FieldIndex.MSG_LENGTH) {
                 continue;
             }
-            msgLength += field.getLengthHex().length()/2 + field.getValueHex().length()/2;
+            msgLength += field.getLengthHex().length() / 2 + field.getValueHex().length() / 2;
         }
         Iso8583Field msgLengthField = this.factory.getFieldType(FieldIndex.MSG_LENGTH).encodeField(Integer.toHexString(msgLength));
-//        this.updateField(msgLengthField);
+        this.putField(msgLengthField);
+    }
+
+    private void refreshBitMap() {
+        for (Iso8583Field field : fields.values()) {
+            if (field.getIndex() < 1) continue;
+            bitmap[field.getIndex() - 1] = 1;
+        }
+        Iso8583Field msgLengthField = this.factory.getFieldType(FieldIndex.BITMAP)
+                .encodeField(EncodeUtil.bytes2Hex(getBitmapBytes()));
+        this.putField(msgLengthField);
     }
 
     /**
@@ -139,7 +142,7 @@ public class Iso8583Message {
         String format = "F%s:[%s]";
         for (Map.Entry<Integer, Iso8583Field> entry : fields.entrySet()) {
             Iso8583Field field = entry.getValue();
-            String index = (field.getIndex() > 0 && field.getIndex() < 10) ? "0" + field.getIndex() : Integer.toString(field.getIndex());
+            String index = (field.getIndex() >= 0 && field.getIndex() < 10) ? "0" + field.getIndex() : Integer.toString(field.getIndex());
             sb.append(String.format(format, index, field.getValue()));
             sb.append("\n");
         }
@@ -150,26 +153,20 @@ public class Iso8583Message {
      * <p>解析报文协议，返回字节数组，用于应用间的消息的传输</p>
      */
     public byte[] getBytes() {
-        //结果返回数据内容
-        byte[] resultContent = new byte[0];
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            // 循环写入所有字段信息
-            for (Iso8583Field field : fields.values()) {
-                baos.write(field.getValueBytes());
-            }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return resultContent;
+        return EncodeUtil.hex2Bytes(getHexString());
     }
 
     /**
      * 获取当前报文的完整字符串表示形式
      */
-    public String getBytesString() {
-        return EncodeUtil.bytes2Hex(getBytes());
+    public String getHexString() {
+        StringBuilder res = new StringBuilder();
+        // 循环写入所有字段信息
+        for (Iso8583Field field : fields.values()) {
+            res.append(field.getLengthHex());
+            res.append(field.getValueHex());
+        }
+        return res.toString();
     }
 
     /**
@@ -231,7 +228,7 @@ public class Iso8583Message {
         if (this == message) {
             return true;
         }
-        return this.getBytesString().equals(message.getBytesString());
+        return this.getHexString().equals(message.getHexString());
     }
 
 }

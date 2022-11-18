@@ -16,6 +16,12 @@ public class Iso8583MessageBuilder {
         this.factory = factory;
     }
 
+    public Iso8583MessageBuilder setField(int index, String value) {
+        Iso8583FieldType fieldType = this.factory.getFieldType(index);
+        setField(fieldType.encodeField(value));
+        return this;
+    }
+
     public Iso8583MessageBuilder setField(Iso8583Field field) {
         fields.put(field.getIndex(), field);
         return this;

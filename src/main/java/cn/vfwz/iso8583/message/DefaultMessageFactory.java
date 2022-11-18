@@ -34,13 +34,14 @@ public class DefaultMessageFactory {
     public static Iso8583MessageFactory generate() {
         Iso8583MessageFactory factory = new Iso8583MessageFactory();
 
-        factory.set(new FixedFieldType(MSG_LENGTH, 2, HEX))
+        factory.set(new FixedFieldType(MSG_LENGTH, 2, HEX, AlignType.RIGHT))
                 .set(new FixedFieldType(TPDU, 10, BCD))
                 .set(new FixedFieldType(HEAD, 12, BCD))
                 .set(new FixedFieldType(MTI, 4, BCD))
                 .set(new FixedFieldType(BITMAP, 8, HEX))
+                .set(new VariableFieldType(F2, LLVAR, BCD))
                 .set(new FixedFieldType(F3, 6, BCD))
-                .set(new FixedFieldType(F4, 6, BCD, AlignType.RIGHT))
+                .set(new FixedFieldType(F4, 12, BCD, AlignType.RIGHT))
                 .set(new FixedFieldType(F11, 6, BCD))
                 .set(new FixedFieldType(F12, 6, BCD))
                 .set(new FixedFieldType(F13, 4, BCD))

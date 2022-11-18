@@ -1,9 +1,16 @@
 package cn.vfwz;
 
+import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.DefaultMessageFactory;
 import cn.vfwz.iso8583.message.Iso8583Message;
+import cn.vfwz.iso8583.message.Iso8583MessageBuilder;
 import cn.vfwz.iso8583.message.Iso8583MessageFactory;
+import cn.vfwz.iso8583.message.field.VariableFieldType;
 import org.junit.Test;
+
+import static cn.vfwz.iso8583.constant.FieldIndex.F59;
+import static cn.vfwz.iso8583.enumeration.FieldDataType.ASCII;
+import static cn.vfwz.iso8583.enumeration.FieldLengthType.LLLVAR;
 
 public class MyTest {
 
@@ -20,74 +27,74 @@ public class MyTest {
     @Test
     public void parseDownloadMessage() {
         Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-        Iso8583Message requestMessage = factory.parseWithoutMsgLength(DOWNLOAD_REQUEST);
+        Iso8583Message requestMessage = factory.parse(DOWNLOAD_REQUEST);
         System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parseWithoutMsgLength(DOWNLOAD_RESPONSE);
+        Iso8583Message responseMessage = factory.parse(DOWNLOAD_RESPONSE);
         System.out.println(responseMessage.toFormatString());
     }
 
     @Test
     public void parseSignInMessage() {
         Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-        Iso8583Message requestMessage = factory.parseWithoutMsgLength(SIGNIN_REQUEST);
+        Iso8583Message requestMessage = factory.parse(SIGNIN_REQUEST);
         System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parseWithoutMsgLength(SIGNIN_RESPONSE);
+        Iso8583Message responseMessage = factory.parse(SIGNIN_RESPONSE);
         System.out.println(responseMessage.toFormatString());
     }
-/*
     @Test
     public void parsePayMessage() {
         Iso8583MessageFactory factory = DefaultMessageFactory.generate();
 //        factory.set(46, variableLengthField(LLLVAR_CHAR));
-        factory.set(59, variableLengthField(LLLVAR_CHAR)); // 59域是TLV应该直接存HEX的，多转了一道
+        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
-        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
+        Iso8583Message requestMessage = factory.parse(PAY_REQUEST);
         System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parseWithoutMsgLength(PAY_RESPONSE);
+        Iso8583Message responseMessage = factory.parse(PAY_RESPONSE);
         System.out.println(responseMessage.toFormatString());
     }
+
 
     @Test
     public void encodePayMessage() {
         Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-//        factory.set(46, variableLengthField(LLLVAR_CHAR));
-        factory.set(59, variableLengthField(LLLVAR_CHAR)); // 59域是TLV应该直接存HEX的，多转了一道
+        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
 //        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        Iso8583Message requestMessage = new Iso8583Message(factory);
-        requestMessage.setTpdu("6000030000");
-        requestMessage.setHeader("603100310100");
-        requestMessage.setMti("0200");
-        requestMessage.setValue(2, "6224242300000069");
-        requestMessage.setValue(3, "000000");
-        requestMessage.setValue(4, "11111");
-        requestMessage.setValue(11, "000079");
-        requestMessage.setValue(12, "141556");
-        requestMessage.setValue(13, "0824");
-        requestMessage.setValue(14, "2903");
-        requestMessage.setValue(22, "071");
-        requestMessage.setValue(23, "001");
-        requestMessage.setValue(25, "00");
-        requestMessage.setValue(26, "12");
-        requestMessage.setValue(41, "10016919");
-        requestMessage.setValue(42, "84329004582000B");
-        requestMessage.setValue(46, "PI06404020205140000240210687000000106060000690708D3903F390808V0");
-        requestMessage.setValue(49, "156");
-        requestMessage.setValue(52, "0000000000000000");
-        requestMessage.setValue(53, "2410000000000000");
-        requestMessage.setValue(55, "9F260846FD62985CAAE7589F2701809F101307011703A00000010A0100000500001EF41C469F37049536C9B89F36020C66950500000000009A032208249C01009F02060000000011115F2A02015682027C009F1A0201569F03060000000000009F330360E9C89F34030000009F3501229F1E0831323334353637388408A0000003330101029F090200309F410400000001");
-        requestMessage.setValue(60, "2200072700060");
-        requestMessage.setValue(62, "FF02213436307C30307C32383638387C3433323232383439");
-        requestMessage.setValue(63, "534D303136CDC489E91786D0BE01F543D813611BCD");
-        requestMessage.setValue(64, "3833353932373435");
+        Iso8583MessageBuilder builder = new Iso8583MessageBuilder(factory);
+        builder.setField(FieldIndex.TPDU, "6000030000");
+        builder.setField(FieldIndex.HEAD, "603100310100");
+        builder.setField(FieldIndex.MTI, "0200");
+        builder.setField(FieldIndex.F2, "6224242300000069");
+        builder.setField(FieldIndex.F3, "000000");
+        builder.setField(FieldIndex.F4, "11111");
+        builder.setField(FieldIndex.F11, "000079");
+        builder.setField(FieldIndex.F12, "141556");
+        builder.setField(FieldIndex.F13, "0824");
+        builder.setField(FieldIndex.F14, "2903");
+        builder.setField(FieldIndex.F22, "071");
+        builder.setField(FieldIndex.F23, "001");
+        builder.setField(FieldIndex.F25, "00");
+        builder.setField(FieldIndex.F26, "12");
+        builder.setField(FieldIndex.F41, "10016919");
+        builder.setField(FieldIndex.F42, "84329004582000B");
+        builder.setField(FieldIndex.F46, "PI06404020205140000240210687000000106060000690708D3903F390808V0");
+        builder.setField(FieldIndex.F49, "156");
+        builder.setField(FieldIndex.F52, "0000000000000000");
+        builder.setField(FieldIndex.F53, "2410000000000000");
+        builder.setField(FieldIndex.F55, "9F260846FD62985CAAE7589F2701809F101307011703A00000010A0100000500001EF41C469F37049536C9B89F36020C66950500000000009A032208249C01009F02060000000011115F2A02015682027C009F1A0201569F03060000000000009F330360E9C89F34030000009F3501229F1E0831323334353637388408A0000003330101029F090200309F410400000001");
+        builder.setField(FieldIndex.F60, "2200072700060");
+        builder.setField(FieldIndex.F62, "FF02213436307C30307C32383638387C3433323232383439");
+        builder.setField(FieldIndex.F63, "534D303136CDC489E91786D0BE01F543D813611BCD");
+        builder.setField(FieldIndex.F64, "3833353932373435");
+        Iso8583Message requestMessage = builder.build();
 
         System.out.println(requestMessage.toFormatString());
+        String requestHex = requestMessage.getHexString();
+        System.out.println(requestHex);
 
-        String responseHex = requestMessage.getBytesString();
-        System.out.println(responseHex);
-
-        Iso8583Message responseMessage = factory.parseWithoutMsgLength(responseHex);
-        System.out.println(responseMessage.toFormatString());
-    }*/
+        Iso8583Message requestMessage2 = factory.parseWithMsgLength(requestHex);
+        System.out.println(requestMessage2.getHexString());
+        System.out.println(requestMessage2.toFormatString());
+    }
 
 }

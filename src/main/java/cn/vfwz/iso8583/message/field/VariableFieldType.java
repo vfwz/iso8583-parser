@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
  */
 public class VariableFieldType extends Iso8583FieldType {
 
-    private FieldLengthType fieldLengthType;
+    private final FieldLengthType fieldLengthType;
 
     public VariableFieldType(int fieldIndex, FieldLengthType fieldLengthType, FieldDataType fieldDataType) {
         super(fieldIndex, fieldDataType);
@@ -44,6 +44,38 @@ public class VariableFieldType extends Iso8583FieldType {
 
     @Override
     public Iso8583Field decodeField(InputStream is) throws IOException {
+        byte[] lengthBytes = new byte[getLengthBytesCount()];
+        is.read(lengthBytes);
+        int dataLength = Integer.parseInt(EncodeUtil.bytes2Hex(lengthBytes), 10);
+
+        int valueBytesCount = getValueBytesCount(dataLength);
+        byte[] valueBytes = new byte[valueBytesCount];
+        is.read(valueBytes);
+
+        String value;
+        String dataHex = EncodeUtil.bytes2Hex(valueBytes);
+        switch (this.fieldDataType) {
+            case BCD:
+                value = dataHex;
+                value = removePad(value, dataLength);
+                break;
+            case HEX:
+                value = dataHex;
+                break;
+            case ASCII:
+                value = new String(valueBytes, this.charset);
+                break;
+            default:
+                throw new Iso8583Exception("暂不支持的域类型[" + this.fieldDataType + "]");
+        }
+
+        return new Iso8583Field(this.getFieldIndex(), dataLength, value, getLengthHex(dataHex.length()), dataHex, this);
+    }
+
+    /**
+     * 获取当前域长度部分所占字节数量
+     */
+    private int getLengthBytesCount() {
         int lengthBytesCount;
         switch (this.fieldLengthType) {
             case LLVAR:
@@ -58,65 +90,49 @@ public class VariableFieldType extends Iso8583FieldType {
             default:
                 throw new Iso8583Exception("暂不支持的域长类型[" + this.fieldLengthType + "]");
         }
-
-        byte[] lengthBytes = new byte[lengthBytesCount];
-        is.read(lengthBytes);
-        int dataLength =  Integer.parseInt(EncodeUtil.bytes2Hex(lengthBytes), 10);
-
-        int valueBytesCount = getValueBytesCount(dataLength);
-        byte[] valueBytes = new byte[valueBytesCount];
-        is.read(valueBytes);
-
-        String value;
-        switch (this.fieldDataType) {
-            case BCD:
-                value = EncodeUtil.bytes2Hex(valueBytes);
-                value = removePad(value, dataLength);
-                break;
-            case HEX:
-                value = EncodeUtil.bytes2Hex(valueBytes);
-                break;
-            case ASCII:
-                value = new String(valueBytes, this.charset);
-                break;
-            default:
-                throw new Iso8583Exception("暂不支持的域类型[" + this.fieldDataType + "]");
-        }
-
-        return new Iso8583Field(this.getFieldIndex(), dataLength, value, "", EncodeUtil.bytes2Hex(valueBytes), this);
+        return lengthBytesCount;
     }
 
     @Override
-    public Iso8583Field encodeField(String data) {
-        String hexData = data;
-        switch (this.fieldDataType) {
-            case BCD:
-                hexData = pad(hexData);
-                break;
-            case HEX:
-                hexData = pad(hexData);
-                break;
-            case ASCII:
-                hexData = EncodeUtil.bytes2Hex(data.getBytes(this.charset));
-                hexData = pad(hexData);
-                break;
-            default:
-                throw new Iso8583Exception("暂不支持的域类型[" + this.fieldDataType + "]");
-        }
-
-        int dataLength = hexData.length() / 2;
-        return new Iso8583Field(this.getFieldIndex(), dataLength, data, "", hexData, this);
-    }
-
-    @Override
-    protected int getValueBytesCount(int valueLength) {
+    protected int getValueBytesCount(int dataLength) {
         switch (fieldDataType) {
             case BCD:
-                return (valueLength + 1) / 2;
+                return (dataLength + 1) / 2;
             case HEX:
             case ASCII:
-                return valueLength;
+                return dataLength;
         }
-        return valueLength;
+        return dataLength;
+    }
+
+    @Override
+    protected String getLengthHex(int valueHexLength) {
+        int lengthBytesCount = getLengthBytesCount();
+
+        // bcd压缩的，hex所见即所得
+        String lengthHex = Integer.toString(getDataLength(valueHexLength));
+        if (lengthHex.length() > lengthBytesCount * 2) {
+            throw new Iso8583Exception("当前域[" + this.fieldIndex + "]设置的值长度超过设定范围[" + this.fieldDataType + "]");
+        }
+        // 变长域的长度部分，补0到指定的字节数目
+        while (lengthHex.length() != lengthBytesCount * 2) {
+            lengthHex = '0' + lengthHex;
+        }
+        return lengthHex;
+    }
+
+    /**
+     * 根据域值的实际Hex长度获得域值的实际长度
+     */
+    @Override
+    protected int getDataLength(int valueHexLength) {
+        switch (fieldDataType) {
+            case BCD:
+                return valueHexLength;
+            case HEX:
+            case ASCII:
+                return valueHexLength / 2;
+        }
+        return valueHexLength / 2;
     }
 }

@@ -59,17 +59,17 @@ public class Iso8583MessageFactory {
      * <p>将接受到的一个字符串格式的消息报文转换为一个Iso8583Message对象。</p>
      * <p>ps:data 包含消息长度信息</p>
      */
-    public Iso8583Message parse(String data) {
+    public Iso8583Message parseWithMsgLength(String data) {
         //将接收到的String转换为byte[]
         byte[] srcData = EncodeUtil.hex2Bytes(data);
-        return parse(srcData);
+        return parseWithMsgLength(srcData);
     }
 
     /**
      * <p>将一个包括消息长度的byte[]格式的消息报文转换为一个Iso8583Message对象</p>
      */
-    public Iso8583Message parse(byte[] data) {
-        return parseWithoutMsgLength(getDestData(data));
+    public Iso8583Message parseWithMsgLength(byte[] data) {
+        return parse(getDestData(data));
     }
 
 
@@ -100,14 +100,14 @@ public class Iso8583MessageFactory {
     /**
      * <p>将一个不包括消息长度的String格式的消息报文转换成为一个Iso8583Message对象</p>
      */
-    public Iso8583Message parseWithoutMsgLength(String data) {
-        return parseWithoutMsgLength(EncodeUtil.hex2Bytes(data));
+    public Iso8583Message parse(String data) {
+        return parse(EncodeUtil.hex2Bytes(data));
     }
 
     /**
      * <p>将一个不包括消息长度的byte[]格式的消息报文转换成为一个Iso8583Message对象</p>
      */
-    public Iso8583Message parseWithoutMsgLength(byte[] data) {
+    public Iso8583Message parse(byte[] data) {
         ByteArrayInputStream destIs = new ByteArrayInputStream(data);
         try {
             /*
@@ -127,12 +127,12 @@ public class Iso8583MessageFactory {
             String strByteBitmap = EncodeUtil.binary(bitMapField.getValueBytes());
             //判断索引是否为“1”来觉得是否要解析当前域
             //不做strByteBitmap.chatAt(0)做判断，因为在创建Iso8583Message对象时，已经通过参数Iso8583Factory对象的 boolean bit128 知道报文格式规范
-            for (int fieldIndex = 1; fieldIndex < strByteBitmap.length(); fieldIndex++) {
+            for (int bitIndex = 1; bitIndex < strByteBitmap.length(); bitIndex++) {
                 //依次遍历下标，0表示当前位置的域不存在
-                if ("0".equals(String.valueOf(strByteBitmap.charAt(fieldIndex)))) {
+                if ("0".equals(String.valueOf(strByteBitmap.charAt(bitIndex)))) {
                     continue;
                 }
-                builder.setField(getFieldType(fieldIndex + 1).decodeField(destIs));
+                builder.setField(getFieldType(bitIndex + 1).decodeField(destIs));
             }
             return builder.build();
         } catch (IOException e) {

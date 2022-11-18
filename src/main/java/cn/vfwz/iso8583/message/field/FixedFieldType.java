@@ -73,32 +73,8 @@ public class FixedFieldType extends Iso8583FieldType {
         return dataLength;
     }
 
-    /**
-     * 将内容解析为当前类型的Field
-     */
     @Override
-    public Iso8583Field encodeField(String data) {
-        String hexData = data;
-        switch (this.fieldDataType) {
-            case BCD:
-                hexData = pad(hexData);
-                break;
-            case HEX:
-                hexData = pad(hexData);
-                break;
-            case ASCII:
-                hexData = EncodeUtil.bytes2Hex(data.getBytes(this.charset));
-                hexData = pad(hexData);
-                break;
-            default:
-                throw new Iso8583Exception("暂不支持的域类型[" + this.fieldDataType + "]");
-        }
-
-        return new Iso8583Field(this.getFieldIndex(), dataLength, data, "", hexData, this);
-    }
-
-    @Override
-    protected int getValueBytesCount(int valueLength) {
+    protected int getValueBytesCount(int hexLength) {
         switch (fieldDataType) {
             case BCD:
                 return (dataLength + 1) / 2;
@@ -106,7 +82,18 @@ public class FixedFieldType extends Iso8583FieldType {
             case ASCII:
                 return dataLength;
         }
-        return valueLength;
+        return hexLength;
+    }
+
+    @Override
+    protected int getDataLength(int valueHexLength) {
+        return this.dataLength;
+    }
+
+    @Override
+    protected String getLengthHex(int valueHexLength) {
+        // 定长域不需要长度部分
+        return "";
     }
 
 

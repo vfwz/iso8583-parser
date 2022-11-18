@@ -8,9 +8,9 @@ public class FieldIndex {
 
     public static final int HEAD = -2;
 
-    public static final int MTI = 0;
+    public static final int MTI = -1;
 
-    public static final int BITMAP = 1;
+    public static final int BITMAP = 0;
 
     public static final int F2 = 2;
 
