@@ -1,4 +1,4 @@
-package cn.ajsgn.common.java8583.util;
+package cn.vfwz.iso8583.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
@@ -50,10 +50,9 @@ public class MacUtil {
             2, 42, 10, 50, 18, 58, 26, 33, 1, 41, 9, 49, 17, 57, 25};
 
     private static final int[] LS = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
-    private static int[][] subKey = new int[16][48];
     private static final int HEX = 0;
-
     private static final int ASC = 1;
+    private static int[][] subKey = new int[16][48];
 
     /**
      * 将16进制字符转换成对应的int类型值:如字符'A'被转换后为10;'B'将被转换为11

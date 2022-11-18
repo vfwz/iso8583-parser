@@ -1,4 +1,4 @@
-package cn.ajsgn.common.java8583.util;
+package cn.vfwz.iso8583.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -13,28 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.ajsgn.common.java8583.ext.tlv;
+package cn.vfwz.iso8583.util;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * <p>TLV字段解析器</p>
+ * <p>Io读取工具类</p>
  *
  * @author Ajsgn@foxmail.com
- * @ClassName: TlvParser
- * @Description: TLV字段解析器
- * @date 2017年8月19日 下午11:47:46
+ * @ClassName: IoUtil
+ * @Description: Io读取工具类
+ * @date 2017年8月20日 上午12:09:31
  */
-public interface TlvParser {
+public class IoUtil {
 
     /**
-     * <p>将一个字符串数据内容解析成一个TlvObject对象</p>
+     * <p>读取一段数据内容</p>
      *
-     * @param data 需要被解析的数据
-     * @return TlvObject 解析结果
-     * @Title: tlvParse
-     * @Description: 将一个字符串数据内容解析成一个TlvObject对象
+     * @param is     数据来源
+     * @param length 读取长度
+     * @return byte[] 读取数据结果
+     * @Title: read
+     * @Description: 读取一段数据内容
      * @author Ajsgn@foxmail.com
-     * @date 2017年8月19日 下午11:48:13
+     * @date 2017年8月20日 上午12:10:07
      */
-    TlvObject tlvParse(String data);
+    public static byte[] read(InputStream is, int length) throws IOException {
+        byte[] bs = new byte[length];
+        is.read(bs);
+        return bs;
+    }
 
 }

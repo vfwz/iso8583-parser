@@ -1,4 +1,4 @@
-package cn.ajsgn.common.java8583.util;
+package cn.vfwz.iso8583.util;
 
 /**
  * <p>编码转换工具类.如:BCD和HEX</p>

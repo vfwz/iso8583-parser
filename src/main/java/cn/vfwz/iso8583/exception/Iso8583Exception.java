@@ -1,6 +1,6 @@
 package cn.vfwz.iso8583.exception;
 
-public class Iso8583Exception extends RuntimeException{
+public class Iso8583Exception extends RuntimeException {
 
     public Iso8583Exception() {
         super();

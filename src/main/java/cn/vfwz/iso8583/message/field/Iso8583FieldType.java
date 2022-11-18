@@ -1,9 +1,9 @@
 package cn.vfwz.iso8583.message.field;
 
-import cn.ajsgn.common.java8583.exception.Iso8583Exception;
-import cn.ajsgn.common.java8583.util.EncodeUtil;
 import cn.vfwz.iso8583.enumeration.AlignType;
 import cn.vfwz.iso8583.enumeration.FieldDataType;
+import cn.vfwz.iso8583.exception.Iso8583Exception;
+import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -83,13 +83,13 @@ public abstract class Iso8583FieldType {
         }
 
         int valueHexLength = hexData.length();
-        return new Iso8583Field(this.getFieldIndex(), getDataLength(valueHexLength), data, getLengthHex(valueHexLength), hexData, this);
+        return new Iso8583Field(this.getFieldIndex(), getValueLength(valueHexLength), data, getLengthHex(valueHexLength), hexData, this);
     }
 
     /**
      * 根据域值的Hex值获取实际数据长度
      */
-    protected abstract int getDataLength(int valueHexLength);
+    protected abstract int getValueLength(int valueHexLength);
 
     public int getFieldIndex() {
         return fieldIndex;
@@ -131,11 +131,11 @@ public abstract class Iso8583FieldType {
             return hexData;
         }
         int targetHexLength;
-        int dataLength = getDataLength(hexData.length());
-        if(FieldDataType.BCD == this.fieldDataType) {
-            targetHexLength = ((dataLength+1)/2)*2; // 奇数变偶数
+        int valueLength = getValueLength(hexData.length());
+        if (FieldDataType.BCD == this.fieldDataType) {
+            targetHexLength = ((valueLength + 1) / 2) * 2; // 奇数变偶数
         } else {
-            targetHexLength = dataLength * 2;
+            targetHexLength = valueLength * 2;
         }
         if (hexData.length() > targetHexLength) {
             log.error("域[{}]中注入的值[{}]长度超过目标长度[{}]", this.getFieldIndex(), hexData, targetHexLength);
@@ -146,7 +146,11 @@ public abstract class Iso8583FieldType {
             log.debug("域[{}]类型为[{}], 当前值[{}]的长度与目标值[{}]不一致，根据填充方案AlignType[{}],filledChar[{}]进行填充"
                     , this.getFieldIndex(), this.fieldDataType.toString(), hexData.length(), targetHexLength
                     , this.alignType, this.padChar);
-            char c = this.padChar;
+            String c = String.valueOf(this.padChar);
+            // 字符类型域转换时直接拼接字面字符
+            if (FieldDataType.ASCII == this.fieldDataType) {
+                c = EncodeUtil.bytes2Hex(c.getBytes(this.charset));
+            }
             while (hexData.length() != targetHexLength) {
                 if (AlignType.RIGHT == this.alignType) {
                     hexData = c + hexData;

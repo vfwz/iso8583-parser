@@ -27,12 +27,9 @@ public class Iso8583MessageBuilder {
         return this;
     }
 
-    /**
-     *
-     */
     public Iso8583Message build() {
         Iso8583Message message = new Iso8583Message(factory);
-        message.refresh(this.fields);
+        message.setFields(this.fields);
         return message;
     }
 }

@@ -2,11 +2,57 @@ package cn.vfwz.iso8583.constant;
 
 public class FieldIndex {
 
-    public static final int MSG_LENGTH = Integer.MIN_VALUE;
+    /**
+     * 报文长度域
+     */
+    public static final int TOTAL_MESSAGE_LENGTH = -99;
 
+    /**
+     * 银联报文头的基本组成
+     * Field1 头长度（Header Length） 1
+     * Field2 头标识和版本号（Header Flag and Version） 1
+     * Field3 整个报文长度（Total Message Length） 4
+     * Field4 目的 ID（Destination ID） 11
+     * Field5 源 ID（Source ID） 11
+     * Field6 保留使用（Reserved for Use） 3
+     * Field7 批次号（Batch Number） 1
+     * Field8 交易信息（Transaction Information） 8
+     * Field9 用户信息（User Information） 1
+     * Field10 拒绝码（Reject Code） 5
+     * <p>
+     * 2E
+     * 02
+     * 30333239
+     * 3438343330303030202020
+     * 3030303130303030202020
+     * 303030
+     * 01
+     * 3030303030303030
+     * 30
+     * 3030303030
+     */
+    public static final int HEADER_LENGTH = -128;
+    public static final int HEADER_FLAG_AND_VERSION = -127;
+    /**
+     * public static final int TOTAL_MESSAGE_LENGTH = -99; 银联整个报文长度不在报文开头
+     **/
+    public static final int DESTINATION_ID = -29;
+    public static final int SOURCE_ID = -28;
+    public static final int RESERVERD = -27;
+    public static final int BATCH_NUMBER = -26;
+    public static final int TRANS_INFO = -25;
+    public static final int USER_INFO = -24;
+    public static final int REJECT_CODE = -23;
+
+    /**
+     * 64域报文头
+     */
     public static final int TPDU = -3;
-
     public static final int HEAD = -2;
+
+    /**
+     * 通用报文域
+     */
 
     public static final int MTI = -1;
 

@@ -1,13 +1,11 @@
 package cn.vfwz.iso8583.message;
 
-import cn.ajsgn.common.java8583.util.EncodeUtil;
 import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.field.Iso8583Field;
 import cn.vfwz.iso8583.message.field.Iso8583FieldType;
+import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -18,7 +16,7 @@ public class Iso8583Message {
     /**
      * <p>自身所拥有的一个报文格式工厂</p>
      */
-    private Iso8583MessageFactory factory = null;
+    private Iso8583MessageFactory factory;
     /**
      * <p>当前报文所对应的一个bitmap 64/128 域规范由本身持有的factory.isBit128()方法决定</p>
      */
@@ -27,21 +25,22 @@ public class Iso8583Message {
 
     /**
      * <p>构造函数，需要一个Iso8583MessageFactory来约束报文解析规范</p>
+     * 默认只能通过Builder创建Message，或者通过Factory解析得到
      */
-    public Iso8583Message(Iso8583MessageFactory factory) {
+    protected Iso8583Message(Iso8583MessageFactory factory) {
         if (null == factory) {
             throw new NullPointerException("required param factory is null");
         }
         this.factory = factory;
-        bitmap = new byte[64];
-//        bitmap[0] = 1;
+        bitmap = new byte[factory.getFieldsCount()];
     }
 
-    public void refresh(Map<Integer, Iso8583Field> fields) {
+    protected void setFields(Map<Integer, Iso8583Field> fields) {
         // 根据新的fields 更新bitmap，msgLength等域
         this.fields = fields;
-        refreshMsgLength();
+        // 先刷新bitmap
         refreshBitMap();
+        refreshMsgLength();
     }
 
     /**
@@ -60,8 +59,10 @@ public class Iso8583Message {
         if (fields.containsKey(index)) {
             fields.remove(index);
             //位图标记
-            refreshMsgLength();
             refreshBitMap();
+            refreshMsgLength();
+        } else {
+            log.info("当前报文中包含域[{}]", index);
         }
     }
 
@@ -99,26 +100,37 @@ public class Iso8583Message {
         return EncodeUtil.binary(getBitmapBitString());
     }
 
+    /**
+     * 当报文域发生变动时，需要刷新报文长度信息
+     */
     private void refreshMsgLength() {
         int msgLength = 0;
         for (Iso8583Field field : fields.values()) {
-            if (field.getIndex() == FieldIndex.MSG_LENGTH) {
+            if (this.factory.getFieldsCount() != 128 && field.getIndex() == FieldIndex.TOTAL_MESSAGE_LENGTH) {
                 continue;
             }
-            msgLength += field.getLengthHex().length() / 2 + field.getValueHex().length() / 2;
+            msgLength += (field.getLengthHex().length() / 2 + field.getValueHex().length() / 2);
         }
-        Iso8583Field msgLengthField = this.factory.getFieldType(FieldIndex.MSG_LENGTH).encodeField(Integer.toHexString(msgLength));
+        Iso8583Field msgLengthField = this.factory
+                .getFieldType(FieldIndex.TOTAL_MESSAGE_LENGTH)
+                .encodeField(Integer.toHexString(msgLength));
         this.putField(msgLengthField);
     }
 
+    /**
+     * 当报文域发生变动时，需要刷新BitMap信息
+     */
     private void refreshBitMap() {
         for (Iso8583Field field : fields.values()) {
-            if (field.getIndex() < 1) continue;
+            if (field.getIndex() < 1) {
+                continue;
+            }
             bitmap[field.getIndex() - 1] = 1;
         }
-        Iso8583Field msgLengthField = this.factory.getFieldType(FieldIndex.BITMAP)
+        Iso8583Field bitMapField = this.factory
+                .getFieldType(FieldIndex.BITMAP)
                 .encodeField(EncodeUtil.bytes2Hex(getBitmapBytes()));
-        this.putField(msgLengthField);
+        this.putField(bitMapField);
     }
 
     /**
@@ -174,7 +186,15 @@ public class Iso8583Message {
      * <p>macBlock : mti+bitmap+data(除去校验位的8583报文数据)</p>
      */
     public String getMacBlockString() {
-        return EncodeUtil.bytes2Hex(getMacBlock());
+        StringBuilder macBlockBuilder = new StringBuilder();
+        //循环写入字段信息
+        for (Iso8583Field field : fields.values()) {
+            if (field.getIndex() >= FieldIndex.MTI && field.getIndex() <= FieldIndex.F63) {
+                macBlockBuilder.append(field.getLengthHex());
+                macBlockBuilder.append(field.getValueHex());
+            }
+        }
+        return macBlockBuilder.toString();
     }
 
     /**
@@ -182,39 +202,22 @@ public class Iso8583Message {
      * <p>macBlock : mti+bitmap+data(出去校验位的8583报文数据)</p>
      */
     public byte[] getMacBlock() {
-        byte[] resultContent = new byte[0];
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            //循环写入字段信息
-            for (Iso8583Field field : fields.values()) {
-                if (field.getIndex() >= FieldIndex.MTI && field.getIndex() <= FieldIndex.F63) {
-                    baos.write(field.getValueBytes());
-                }
-            }
-            resultContent = baos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return resultContent;
+        return EncodeUtil.hex2Bytes(getMacBlockString());
     }
 
     /**
      * <p>获取校验域的字符串形式值</p>
      */
     public String getMacString() {
-        return EncodeUtil.bytes2Hex(getMac());
+        Iso8583Field field = fields.get(FieldIndex.F64);
+        return field.getValueHex();
     }
 
     /**
      * <p>获取校验域的字节数组格式</p>
      */
     public byte[] getMac() {
-        //取最后一个域
-        Iso8583Field field = fields.get(FieldIndex.F64);
-        if (null != field) {
-            return field.getValueBytes();
-        }
-        return null;
+        return EncodeUtil.hex2Bytes(getMacString());
     }
 
 

@@ -1,10 +1,11 @@
 package cn.vfwz.iso8583.message;
 
-import cn.ajsgn.common.java8583.util.EncodeUtil;
 import cn.vfwz.iso8583.constant.FieldIndex;
+import cn.vfwz.iso8583.exception.Iso8583Exception;
 import cn.vfwz.iso8583.message.field.FixedFieldType;
 import cn.vfwz.iso8583.message.field.Iso8583Field;
 import cn.vfwz.iso8583.message.field.Iso8583FieldType;
+import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
@@ -23,15 +24,25 @@ public class Iso8583MessageFactory {
      * <p>相当于是一个报文模板集合</p>
      */
     private final Map<Integer, Iso8583FieldType> fieldTypeMap = new TreeMap<>();
+    // 报文域长度
+    private int fieldsCount = 64; // 默认64域报文
 
 
     public Iso8583MessageFactory() {
+    }
+
+    public Iso8583MessageFactory(int fieldsCount) {
+        this.fieldsCount = fieldsCount;
     }
 
     /**
      * <p>分别设置8583报文中各个字段域的消息数据格式</p>
      */
     public Iso8583MessageFactory set(Iso8583FieldType fieldType) {
+        if (fieldType.getFieldIndex() > fieldsCount) {
+            log.error("当前工厂最大报文域数量为:[{}], 该域索引[{}]超出了设置范围", fieldsCount, fieldType.getFieldIndex());
+            throw new Iso8583Exception("当前工厂最大报文域数量为:[" + fieldsCount + "], 该域索引[" + fieldType.getFieldIndex() + "]超出了设置范围");
+        }
         fieldTypeMap.put(fieldType.getFieldIndex(), fieldType);
         return this;
     }
@@ -41,16 +52,9 @@ public class Iso8583MessageFactory {
      * <p>index为int类型是为了保证避免由Factory维护的类型暴露</p>
      */
     public Iso8583FieldType getFieldType(int index) {
-        return getFieldType(Integer.valueOf(index));
-    }
-
-    /**
-     * <p>获取指定索引的消息类型格式</p>
-     */
-    private Iso8583FieldType getFieldType(Integer index) {
         Iso8583FieldType fieldType = fieldTypeMap.get(index);
         if (null == fieldType) {
-            throw new NullPointerException(String.format("没有找到当前索引的配置信息 ： %s", index));
+            throw new Iso8583Exception(String.format("没有找到当前索引的配置信息 ： %s", index));
         }
         return fieldType;
     }
@@ -69,7 +73,11 @@ public class Iso8583MessageFactory {
      * <p>将一个包括消息长度的byte[]格式的消息报文转换为一个Iso8583Message对象</p>
      */
     public Iso8583Message parseWithMsgLength(byte[] data) {
-        return parse(getDestData(data));
+        if (this.fieldsCount == 128) { // 银联报文的域长度不在开头
+            return parse(data);
+        } else {
+            return parse(getDestData(data));
+        }
     }
 
 
@@ -78,7 +86,7 @@ public class Iso8583MessageFactory {
      * <p>读取factory.msgLength个长度的字节作为整体报文的长度</p>\
      */
     private byte[] getDestData(byte[] srcData) {
-        FixedFieldType fieldType = (FixedFieldType) fieldTypeMap.get(FieldIndex.MSG_LENGTH);
+        FixedFieldType fieldType = (FixedFieldType) fieldTypeMap.get(FieldIndex.TOTAL_MESSAGE_LENGTH);
         //创建一个factory.msgLength个长度的byte[]用于去读取报文长度信息
         byte[] dataLength = new byte[fieldType.getDataLength()];
         //目标信息数据
@@ -110,17 +118,24 @@ public class Iso8583MessageFactory {
     public Iso8583Message parse(byte[] data) {
         ByteArrayInputStream destIs = new ByteArrayInputStream(data);
         try {
-            /*
-             * 将srcData转换为ByteArrayInputStream对象，由ByteArrayInputStream来管理数组的pos
-             * 用ByteArrayInputStream原因有2：
-             * 1、ByteArrayInputStream 自身有pos属性，方便管理数组游标方便读取
-             * 2、ByteArrayInputStream 内部持有buf，不需要做close()
-             */
             //顺序解析：tpdu-head-mti-bitmap-data
             Iso8583MessageBuilder builder = new Iso8583MessageBuilder(this);
-            builder.setField(getFieldType(FieldIndex.TPDU).decodeField(destIs))
-                    .setField(getFieldType(FieldIndex.HEAD).decodeField(destIs))
-                    .setField(getFieldType(FieldIndex.MTI).decodeField(destIs));
+
+//            builder.setField(getFieldType(FieldIndex.TPDU).decodeField(destIs))
+//                    .setField(getFieldType(FieldIndex.HEAD).decodeField(destIs))
+//                    .setField(getFieldType(FieldIndex.MTI).decodeField(destIs));
+            for (int headerIndex = -128; headerIndex < 0; headerIndex++) { // 解析BitMap之前的头部信息，负数索引是
+                if(this.fieldsCount != 128 && FieldIndex.TOTAL_MESSAGE_LENGTH == headerIndex) {
+                    continue; // 非128报文，不解析长度头
+                }
+                Iso8583FieldType headerFieldType = fieldTypeMap.get(headerIndex);
+                if (headerFieldType == null) {
+                    continue;
+                }
+                builder.setField(headerFieldType.decodeField(destIs));
+            }
+
+
             Iso8583Field bitMapField = getFieldType(FieldIndex.BITMAP).decodeField(destIs);
             builder.setField(bitMapField);
             //解析bitmap，由此决定之后去解析哪些字段信息  0110000000111100000000001000000100001010110100001000110000010001
@@ -141,4 +156,7 @@ public class Iso8583MessageFactory {
         return null;
     }
 
+    public int getFieldsCount() {
+        return fieldsCount;
+    }
 }

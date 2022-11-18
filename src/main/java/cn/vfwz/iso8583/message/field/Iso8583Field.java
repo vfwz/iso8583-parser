@@ -15,7 +15,7 @@
  */
 package cn.vfwz.iso8583.message.field;
 
-import cn.ajsgn.common.java8583.util.EncodeUtil;
+import cn.vfwz.iso8583.util.EncodeUtil;
 
 /**
  * <p>8583报文字段抽象，不可变类<p>
@@ -59,11 +59,19 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
         return index;
     }
 
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
     /**
      * <p>获取当前字段值</p>
      */
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     /**
@@ -73,8 +81,8 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
         return fieldType;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setFieldType(Iso8583FieldType fieldType) {
+        this.fieldType = fieldType;
     }
 
     public int getLength() {
@@ -83,10 +91,6 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
 
     public void setLength(int length) {
         this.length = length;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 
     public String getValueHex() {
@@ -103,10 +107,6 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
 
     public void setLengthHex(String lengthHex) {
         this.lengthHex = lengthHex;
-    }
-
-    public void setFieldType(Iso8583FieldType fieldType) {
-        this.fieldType = fieldType;
     }
 
     public byte[] getValueBytes() {
@@ -135,23 +135,31 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Iso8583Field other = (Iso8583Field) obj;
         if (fieldType == null) {
-            if (other.fieldType != null)
+            if (other.fieldType != null) {
                 return false;
-        } else if (!fieldType.equals(other.fieldType))
+            }
+        } else if (!fieldType.equals(other.fieldType)) {
             return false;
-        if (index != other.index)
+        }
+        if (index != other.index) {
             return false;
+        }
         if (value == null) {
             return other.value == null;
-        } else return value.equals(other.value);
+        } else {
+            return value.equals(other.value);
+        }
     }
 
 }

@@ -1,9 +1,9 @@
 package cn.vfwz.iso8583.message.field;
 
-import cn.ajsgn.common.java8583.exception.Iso8583Exception;
-import cn.ajsgn.common.java8583.util.EncodeUtil;
 import cn.vfwz.iso8583.enumeration.AlignType;
 import cn.vfwz.iso8583.enumeration.FieldDataType;
+import cn.vfwz.iso8583.exception.Iso8583Exception;
+import cn.vfwz.iso8583.util.EncodeUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,7 +86,7 @@ public class FixedFieldType extends Iso8583FieldType {
     }
 
     @Override
-    protected int getDataLength(int valueHexLength) {
+    protected int getValueLength(int valueHexLength) {
         return this.dataLength;
     }
 

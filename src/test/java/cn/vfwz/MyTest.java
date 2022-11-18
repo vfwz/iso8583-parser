@@ -55,7 +55,7 @@ public class MyTest {
 
 
     @Test
-    public void encodePayMessage() {
+    public void encodePayRequestMessage() {
         Iso8583MessageFactory factory = DefaultMessageFactory.generate();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
@@ -66,7 +66,7 @@ public class MyTest {
         builder.setField(FieldIndex.MTI, "0200");
         builder.setField(FieldIndex.F2, "6224242300000069");
         builder.setField(FieldIndex.F3, "000000");
-        builder.setField(FieldIndex.F4, "11111");
+        builder.setField(FieldIndex.F4, "12");
         builder.setField(FieldIndex.F11, "000079");
         builder.setField(FieldIndex.F12, "141556");
         builder.setField(FieldIndex.F13, "0824");
@@ -77,7 +77,7 @@ public class MyTest {
         builder.setField(FieldIndex.F26, "12");
         builder.setField(FieldIndex.F41, "10016919");
         builder.setField(FieldIndex.F42, "84329004582000B");
-        builder.setField(FieldIndex.F46, "PI06404020205140000240210687000000106060000690708D3903F390808V0");
+        builder.setField(FieldIndex.F46, "PI06404020205140000240210687000000106060000690708D3903F390808V0.0.3.0");
         builder.setField(FieldIndex.F49, "156");
         builder.setField(FieldIndex.F52, "0000000000000000");
         builder.setField(FieldIndex.F53, "2410000000000000");
@@ -96,5 +96,53 @@ public class MyTest {
         System.out.println(requestMessage2.getHexString());
         System.out.println(requestMessage2.toFormatString());
     }
+
+
+    @Test
+    public void encodePayResponseMessage() {
+        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
+        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+
+//        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
+        Iso8583MessageBuilder builder = new Iso8583MessageBuilder(factory);
+        builder.setField(FieldIndex.TPDU, "6000030000");
+        builder.setField(FieldIndex.HEAD, "603100310100");
+        builder.setField(FieldIndex.MTI, "0210");
+        builder.setField(FieldIndex.F2, "6224242300000069");
+        builder.setField(FieldIndex.F3, "000000");
+        builder.setField(FieldIndex.F4, "1111");
+        builder.setField(FieldIndex.F11, "000079");
+        builder.setField(FieldIndex.F12, "141556");
+        builder.setField(FieldIndex.F13, "0824");
+        builder.setField(FieldIndex.F14, "2903");
+        builder.setField(FieldIndex.F23, "000");
+        builder.setField(FieldIndex.F25, "00");
+        builder.setField(FieldIndex.F26, "12");
+        builder.setField(FieldIndex.F32, "48431665");
+        builder.setField(FieldIndex.F37, "X00004002761");
+        builder.setField(FieldIndex.F38, "650852");
+        builder.setField(FieldIndex.F39, "00");
+        builder.setField(FieldIndex.F41, "10016919");
+        builder.setField(FieldIndex.F42, "84316655812000A");
+        builder.setField(FieldIndex.F43, "河南省银隆信息技术有限公司");
+        builder.setField(FieldIndex.F44, "0309       4843       ");
+        builder.setField(FieldIndex.F49, "156");
+        builder.setField(FieldIndex.F53, "2400000000000000");
+        builder.setField(FieldIndex.F55, "9F260846FD62985CAAE7589F2701809F101307011703A00000010A0100000500001EF41C469F37049536C9B89F36020C66950500000000009A032208249C01009F02060000000011115F2A02015682027C009F1A0201569F03060000000000009F330360E9C89F34030000009F3501229F1E0831323334353637388408A0000003330101029F090200309F410400000001");
+        builder.setField(FieldIndex.F56, "00+成功");
+        builder.setField(FieldIndex.F59, "EF013368747470733A2F2F7061792E6B64622D746A2E636F6D2F68356D65726368616E74EF0218C9A8C2EBC8CFD6A4CCE1C9FDBDE1CBE3B6EE");
+        builder.setField(FieldIndex.F60, "22000727000600070");
+        builder.setField(FieldIndex.F64, "4246314136464335");
+        Iso8583Message responseMessage = builder.build();
+
+        System.out.println(responseMessage.toFormatString());
+        String responseHex = responseMessage.getHexString();
+        System.out.println(responseHex);
+
+        Iso8583Message responseMessage2 = factory.parseWithMsgLength(responseHex);
+        System.out.println(responseMessage2.getHexString());
+        System.out.println(responseMessage2.toFormatString());
+    }
+
 
 }
