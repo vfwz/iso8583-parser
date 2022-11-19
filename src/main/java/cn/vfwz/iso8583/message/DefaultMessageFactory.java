@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2017, Ajsgn 杨光 (Ajsgn@foxmail.com).
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package cn.vfwz.iso8583.message;
 
 import cn.vfwz.iso8583.enumeration.AlignType;
@@ -21,19 +6,17 @@ import cn.vfwz.iso8583.message.field.FixedFieldType;
 import cn.vfwz.iso8583.message.field.VariableFieldType;
 
 import static cn.vfwz.iso8583.constant.FieldIndex.*;
-import static cn.vfwz.iso8583.enumeration.FieldDataType.*;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.*;
 import static cn.vfwz.iso8583.enumeration.FieldLengthType.*;
 
 
 /**
- * 默认消息工厂
- * 实际使用时，在项目中只需要生成一个，不用每次都生成
+ * 默认报文工厂
  */
 public class DefaultMessageFactory {
 
-    public static Iso8583MessageFactory generate() {
-        Iso8583MessageFactory factory = new Iso8583MessageFactory();
-
+    public static MessageFactory produce() {
+        MessageFactory factory = new MessageFactory();
         factory.set(new FixedFieldType(TOTAL_MESSAGE_LENGTH, 2, HEX, AlignType.RIGHT))
                 .set(new FixedFieldType(TPDU, 10, BCD))
                 .set(new FixedFieldType(HEAD, 12, BCD))
@@ -81,8 +64,8 @@ public class DefaultMessageFactory {
         return factory;
     }
 
-    public static Iso8583MessageFactory generateUnion() {
-        Iso8583MessageFactory factory = new Iso8583MessageFactory(128);
+    public static MessageFactory produceUnion() {
+        MessageFactory factory = new MessageFactory(128);
         /**
          * 银联报文头的基本组成
          * Field1 头长度（Header Length） 1
@@ -206,14 +189,14 @@ public class DefaultMessageFactory {
         return factory;
     }
 
-    public static Iso8583MessageFactory generate(int fieldsCount) {
+    public static MessageFactory produce(int fieldsCount) {
         // 64域POS报文
         if (fieldsCount == 64) {
-            return generate();
+            return produce();
         }
         // 128域银联报文
         else if (fieldsCount == 128) {
-            return generateUnion();
+            return produceUnion();
         } else {
             throw new Iso8583Exception("暂不支持的域长度报文:" + fieldsCount);
         }

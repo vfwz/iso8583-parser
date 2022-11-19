@@ -18,32 +18,41 @@ package cn.vfwz.iso8583.message.field;
 import cn.vfwz.iso8583.util.EncodeUtil;
 
 /**
- * <p>8583报文字段抽象，不可变类<p>
+ * 8583报文域抽象，不可变类
  */
-public final class Iso8583Field implements Comparable<Iso8583Field> {
+public class Field implements Comparable<Field> {
 
     /**
      * 报文字段索引
      */
-    private int index;
-    private int length;
-    private String value;
-    private String valueHex;
-    private String lengthHex;
+    private final Integer index;
+    /**
+     * 数据长度
+     */
+    private final Integer length;
+    /**
+     * 数据值
+     */
+    private final String value;
+    /**
+     * hex格式的数据值
+     */
+    private final String valueHex;
+    /**
+     * hex格式的长度值
+     */
+    private final String lengthHex;
 
     /**
      * 报文格式类型
      */
-    private Iso8583FieldType fieldType = null;
+    private final FieldType fieldType;
 
     /**
      * <p>构造函数</p>
-     *
-     * @param index     当前字段索引
-     * @param value     当前字段值
-     * @param fieldType 当前字段类型
+     * 不可变数据，只能通过构造函数生成
      */
-    public Iso8583Field(int index, int length, String value, String lengthHex, String valueHex, Iso8583FieldType fieldType) {
+    public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType) {
         this.index = index;
         this.length = length;
         this.value = value;
@@ -55,12 +64,8 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
     /**
      * <p>获取当前字段索引</p>
      */
-    public int getIndex() {
+    public Integer getIndex() {
         return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
 
     /**
@@ -70,43 +75,23 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
         return value;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
     /**
      * <p>获取当前字段类型</p>
      */
-    public Iso8583FieldType getFieldType() {
+    public FieldType getFieldType() {
         return fieldType;
-    }
-
-    public void setFieldType(Iso8583FieldType fieldType) {
-        this.fieldType = fieldType;
     }
 
     public int getLength() {
         return length;
     }
 
-    public void setLength(int length) {
-        this.length = length;
-    }
-
     public String getValueHex() {
         return valueHex;
     }
 
-    public void setValueHex(String valueHex) {
-        this.valueHex = valueHex;
-    }
-
     public String getLengthHex() {
         return lengthHex;
-    }
-
-    public void setLengthHex(String lengthHex) {
-        this.lengthHex = lengthHex;
     }
 
     public byte[] getValueBytes() {
@@ -114,7 +99,7 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
     }
 
     @Override
-    public int compareTo(Iso8583Field field) {
+    public int compareTo(Field field) {
         return this.index - field.index;
     }
 
@@ -144,7 +129,7 @@ public final class Iso8583Field implements Comparable<Iso8583Field> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Iso8583Field other = (Iso8583Field) obj;
+        Field other = (Field) obj;
         if (fieldType == null) {
             if (other.fieldType != null) {
                 return false;

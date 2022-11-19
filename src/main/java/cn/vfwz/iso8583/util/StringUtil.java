@@ -2,6 +2,28 @@ package cn.vfwz.iso8583.util;
 
 public class StringUtil {
 
+    public static String leftPad(String val, int targetLength, char c){
+        if(val == null || val.length() >= targetLength) {
+            return val;
+        }
+        StringBuilder sb = new StringBuilder(val);
+        for (int i = 0; i < targetLength - val.length(); i++) {
+            sb.insert(0, c);
+        }
+        return sb.toString();
+    }
+
+    public static String rightPad(String val, int targetLength, char c){
+        if(val == null || val.length() >= targetLength) {
+            return val;
+        }
+        StringBuilder sb = new StringBuilder(val);
+        for (int i = 0; i < targetLength - val.length(); i++) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     public static String repeat(String str, int repeat) {
         if (str == null) {
             return null;

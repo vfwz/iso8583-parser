@@ -2,17 +2,21 @@ package cn.vfwz;
 
 import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.DefaultMessageFactory;
-import cn.vfwz.iso8583.message.Iso8583Message;
-import cn.vfwz.iso8583.message.Iso8583MessageBuilder;
-import cn.vfwz.iso8583.message.Iso8583MessageFactory;
+import cn.vfwz.iso8583.message.Message;
+import cn.vfwz.iso8583.message.MessageBuilder;
+import cn.vfwz.iso8583.message.MessageFactory;
+import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.VariableFieldType;
+import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static cn.vfwz.iso8583.constant.FieldIndex.F59;
-import static cn.vfwz.iso8583.enumeration.FieldDataType.ASCII;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.ASCII;
 import static cn.vfwz.iso8583.enumeration.FieldLengthType.LLLVAR;
 
-public class MyTest {
+public class PosMessageTest {
 
     public static final String DOWNLOAD_REQUEST = "600003000060310031010008000000000000C408103130303136393139383433323930303435383230303042004750493034323034303230323035313430303030323430323130363837303030303030313038303856302E302E332E3004000000000000000011000000014200";
     public static final String DOWNLOAD_RESPONSE = "60000300006031003101000810001800000AE00114163829082330303030303030303030303030303130303136393139383433323930303435383230303042C4ABCEC4D5DCD3D0CFDEB9ABCBBE20202020202020202020202020202020202020202020202020200004B3C9B9A60011000000014200006439354638454530363337444143453935423232383235443533323630453744424238373633383230363334303343343736393843304131363334463446463231";
@@ -23,44 +27,80 @@ public class MyTest {
     public static final String SIGN_IMG_REQUEST = "600003000060310031010009205022000008C00A151662242423000000690000000011110000790824583030303034303032373631313030313639313938343332393030343538323030304204000000000000000050FF001ABAD3C4CFCAA1D2F8C2A1D0C5CFA2BCBCCAF5D3D0CFDEB9ABCBBEFF0104CFFBB7D1FF020101FF0607202208241415560008070007270126000001000000008000000040000000807F0000481CB93FCFF8E273061BDF301D76CB6869AEE9705A37872F81613C17DADB45AE6006D1C45C20399538F24115D37CA710009388652D49B88EA3FB843D29684CA53982D5AE3A1EA03191299C498B9F39DDA2825D982FD5C2312A115EFD6248CA1D9D8F140FB3AF676970FF023542334236433246";
     public static final String SIGN_IMG_RESPONSE = "60000300006031003101000930002000000AC00111000079583030303034303032373631303031303031363931393834333136363535383132303030410004B3C9B9A60008070007273839314333323442";
 
-
-    @Test
-    public void parseDownloadMessage() {
-        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-        Iso8583Message requestMessage = factory.parse(DOWNLOAD_REQUEST);
-        System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parse(DOWNLOAD_RESPONSE);
-        System.out.println(responseMessage.toFormatString());
-    }
-
-    @Test
-    public void parseSignInMessage() {
-        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-        Iso8583Message requestMessage = factory.parse(SIGNIN_REQUEST);
-        System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parse(SIGNIN_RESPONSE);
-        System.out.println(responseMessage.toFormatString());
-    }
-    @Test
-    public void parsePayMessage() {
-        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
-//        factory.set(46, variableLengthField(LLLVAR_CHAR));
+    private void checkMessageDecodeAndEncode(String messageHexOrigin) {
+        // 解析源报文
+        MessageFactory factory = DefaultMessageFactory.produce();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
-        Iso8583Message requestMessage = factory.parse(PAY_REQUEST);
+        Message requestMessage = factory.parse(messageHexOrigin);
         System.out.println(requestMessage.toFormatString());
-        Iso8583Message responseMessage = factory.parse(PAY_RESPONSE);
-        System.out.println(responseMessage.toFormatString());
+        System.out.println("origin:" + messageHexOrigin);
+
+        // 根据解析的报文再组装报文
+        Iterator<Field> fieldIterator = requestMessage.getFieldIterator();
+        MessageBuilder builder = new MessageBuilder(factory);
+        while(fieldIterator.hasNext()) {
+            Field field = fieldIterator.next();
+            builder.setField(field.getIndex(), field.getValue());
+        }
+        Message requestMessageAfter = builder.build();
+        String messageHexAfter = requestMessageAfter.getHexString();
+        System.out.println(" after:" + messageHexAfter);
+        System.out.println(requestMessageAfter.toFormatString());
+
+        // 组装后报文与实际报文应该相同
+        Assert.assertEquals(messageHexOrigin, messageHexAfter.substring(4));
+
+
+        // 再解析一遍组装后的报文
+        Message requestMessageThird = factory.parseWithMsgLength(messageHexAfter);
+        String messageHexThird = requestMessageThird.getHexString();
+        System.out.println(requestMessageThird.toFormatString());
+        System.out.println(" third:" + messageHexThird);
+
+        Assert.assertEquals(messageHexOrigin, messageHexThird.substring(4));
+
+
+
     }
 
+    @Test
+    public void downloadRequestMessage() {
+        checkMessageDecodeAndEncode(DOWNLOAD_REQUEST);
+    }
+
+    @Test
+    public void downloadResponseMessage() {
+        checkMessageDecodeAndEncode(DOWNLOAD_RESPONSE);
+    }
+
+    @Test
+    public void signInRequestMessage() {
+        checkMessageDecodeAndEncode(SIGNIN_REQUEST);
+    }
+
+    @Test
+    public void signInResponseMessage() {
+        checkMessageDecodeAndEncode(SIGNIN_RESPONSE);
+    }
+
+    @Test
+    public void payRequestMessage() {
+        checkMessageDecodeAndEncode(PAY_REQUEST);
+    }
+
+    @Test
+    public void payResponseMessage() {
+        checkMessageDecodeAndEncode(PAY_RESPONSE);
+    }
 
     @Test
     public void encodePayRequestMessage() {
-        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
+        MessageFactory factory = DefaultMessageFactory.produce();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
 //        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        Iso8583MessageBuilder builder = new Iso8583MessageBuilder(factory);
+        MessageBuilder builder = new MessageBuilder(factory);
         builder.setField(FieldIndex.TPDU, "6000030000");
         builder.setField(FieldIndex.HEAD, "603100310100");
         builder.setField(FieldIndex.MTI, "0200");
@@ -86,13 +126,13 @@ public class MyTest {
         builder.setField(FieldIndex.F62, "FF02213436307C30307C32383638387C3433323232383439");
         builder.setField(FieldIndex.F63, "534D303136CDC489E91786D0BE01F543D813611BCD");
         builder.setField(FieldIndex.F64, "3833353932373435");
-        Iso8583Message requestMessage = builder.build();
+        Message requestMessage = builder.build();
 
         System.out.println(requestMessage.toFormatString());
         String requestHex = requestMessage.getHexString();
         System.out.println(requestHex);
 
-        Iso8583Message requestMessage2 = factory.parseWithMsgLength(requestHex);
+        Message requestMessage2 = factory.parseWithMsgLength(requestHex);
         System.out.println(requestMessage2.getHexString());
         System.out.println(requestMessage2.toFormatString());
     }
@@ -100,11 +140,11 @@ public class MyTest {
 
     @Test
     public void encodePayResponseMessage() {
-        Iso8583MessageFactory factory = DefaultMessageFactory.generate();
+        MessageFactory factory = DefaultMessageFactory.produce();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
 //        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        Iso8583MessageBuilder builder = new Iso8583MessageBuilder(factory);
+        MessageBuilder builder = new MessageBuilder(factory);
         builder.setField(FieldIndex.TPDU, "6000030000");
         builder.setField(FieldIndex.HEAD, "603100310100");
         builder.setField(FieldIndex.MTI, "0210");
@@ -133,15 +173,71 @@ public class MyTest {
         builder.setField(FieldIndex.F59, "EF013368747470733A2F2F7061792E6B64622D746A2E636F6D2F68356D65726368616E74EF0218C9A8C2EBC8CFD6A4CCE1C9FDBDE1CBE3B6EE");
         builder.setField(FieldIndex.F60, "22000727000600070");
         builder.setField(FieldIndex.F64, "4246314136464335");
-        Iso8583Message responseMessage = builder.build();
+        Message responseMessage = builder.build();
 
         System.out.println(responseMessage.toFormatString());
         String responseHex = responseMessage.getHexString();
         System.out.println(responseHex);
 
-        Iso8583Message responseMessage2 = factory.parseWithMsgLength(responseHex);
-        System.out.println(responseMessage2.getHexString());
+        Message responseMessage2 = factory.parseWithMsgLength(responseHex);
+
+        String responseHex2 = responseMessage2.getHexString();
+        System.out.println(responseHex2);
         System.out.println(responseMessage2.toFormatString());
+
+        Assert.assertEquals(responseHex, responseHex2);
+    }
+
+
+
+    @Test
+    public void encodeEmptyMessage() {
+        MessageFactory factory = DefaultMessageFactory.produce();
+        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+
+//        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
+        MessageBuilder builder = new MessageBuilder(factory);
+        builder.setField(FieldIndex.TPDU, "");
+        builder.setField(FieldIndex.HEAD, "");
+        builder.setField(FieldIndex.MTI, "");
+        builder.setField(FieldIndex.F2, "");
+        builder.setField(FieldIndex.F3, "");
+        builder.setField(FieldIndex.F4, "");
+        builder.setField(FieldIndex.F11, "");
+        builder.setField(FieldIndex.F12, "");
+        builder.setField(FieldIndex.F13, "");
+        builder.setField(FieldIndex.F14, "");
+        builder.setField(FieldIndex.F23, "");
+        builder.setField(FieldIndex.F25, "");
+        builder.setField(FieldIndex.F26, "");
+        builder.setField(FieldIndex.F32, "");
+        builder.setField(FieldIndex.F37, "");
+        builder.setField(FieldIndex.F38, "");
+        builder.setField(FieldIndex.F39, "");
+        builder.setField(FieldIndex.F41, "");
+        builder.setField(FieldIndex.F42, "");
+        builder.setField(FieldIndex.F43, "");
+        builder.setField(FieldIndex.F44, "");
+        builder.setField(FieldIndex.F49, "");
+        builder.setField(FieldIndex.F53, "");
+        builder.setField(FieldIndex.F55, "");
+        builder.setField(FieldIndex.F56, "");
+        builder.setField(FieldIndex.F59, "");
+        builder.setField(FieldIndex.F60, "");
+        builder.setField(FieldIndex.F64, "");
+        Message responseMessage = builder.build();
+
+        System.out.println(responseMessage.toFormatString());
+        String responseHex = responseMessage.getHexString();
+        System.out.println(responseHex);
+
+        Message responseMessage2 = factory.parseWithMsgLength(responseHex);
+
+        String responseHex2 = responseMessage2.getHexString();
+        System.out.println(responseHex2);
+        System.out.println(responseMessage2.toFormatString());
+
+        Assert.assertEquals(responseHex, responseHex2);
     }
 
 

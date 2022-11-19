@@ -1,5 +1,8 @@
 package cn.vfwz.iso8583.exception;
 
+/**
+ * 该工具类统一业务报错类型
+ */
 public class Iso8583Exception extends RuntimeException {
 
     public Iso8583Exception() {
