@@ -31,19 +31,20 @@ public class PosMessageTest {
         // 解析源报文
         MessageFactory factory = DefaultMessageFactory.produce();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+        MessageBuilder builder = new MessageBuilder(factory);
 
-        Message requestMessage = factory.parse(messageHexOrigin);
+        Message requestMessage = builder.build(messageHexOrigin);
         System.out.println(requestMessage.toFormatString());
         System.out.println("origin:" + messageHexOrigin);
 
         // 根据解析的报文再组装报文
+        MessageBuilder builder2 = new MessageBuilder(factory);
         Iterator<Field> fieldIterator = requestMessage.getFieldIterator();
-        MessageBuilder builder = new MessageBuilder(factory);
         while(fieldIterator.hasNext()) {
             Field field = fieldIterator.next();
-            builder.setField(field.getIndex(), field.getValue());
+            builder2.setField(field.getIndex(), field.getValue());
         }
-        Message requestMessageAfter = builder.build();
+        Message requestMessageAfter = builder2.build();
         String messageHexAfter = requestMessageAfter.getHexString();
         System.out.println(" after:" + messageHexAfter);
         System.out.println(requestMessageAfter.toFormatString());
