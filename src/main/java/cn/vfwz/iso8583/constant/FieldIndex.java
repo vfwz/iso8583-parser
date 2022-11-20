@@ -7,7 +7,7 @@ public class FieldIndex {
      */
     public static final int TOTAL_MESSAGE_LENGTH = -99;
 
-    /**
+    /*
      * 银联报文头的基本组成
      * Field1 头长度（Header Length） 1
      * Field2 头标识和版本号（Header Flag and Version） 1
@@ -19,7 +19,7 @@ public class FieldIndex {
      * Field8 交易信息（Transaction Information） 8
      * Field9 用户信息（User Information） 1
      * Field10 拒绝码（Reject Code） 5
-     * <p>
+     * Example(Hex):
      * 2E
      * 02
      * 30333239
@@ -44,8 +44,25 @@ public class FieldIndex {
     public static final int USER_INFO = -24;
     public static final int REJECT_CODE = -23;
 
-    /**
+    /*
      * 64域报文头
+     *
+     * TPDU N10
+     *   ID	      60H
+     *   目的地址   NN NN
+     *   源地址    NN NN
+     *
+     * 报文头 N12
+     *   应用类别定义 N2
+     *   软件总版本号 N2
+     *   终端状态    N1
+     *   处理要求    N1
+     *   软件分版本号 N6
+     *
+     * Example(HEX)
+     * TPDU: 6000030000
+     * HEAD: 603100310100
+     *
      */
     public static final int TPDU = -3;
     public static final int HEAD = -2;

@@ -26,10 +26,11 @@ public enum FieldLengthType {
 
     /**
      * 根据域值长度计算域长部分的hex值
-     * @param dataLength 域值长度
+     *
+     * @param valueLength 域值长度
      * @return 域长部分的Hex值
      */
-    public String encode(int dataLength) {
+    public String encode(int valueLength) {
         String lengthStr;
         int lengthBytesCount = getBytesCount();
         switch (this) {
@@ -40,7 +41,7 @@ public enum FieldLengthType {
             case LLVAR:
             case LLLVAR:
             case LLLLVAR:
-                lengthStr = Integer.toString(dataLength);
+                lengthStr = Integer.toString(valueLength);
                 if ((lengthStr.length() + 1) / 2 > lengthBytesCount) {
                     throw new Iso8583Exception("当前值长度[" + lengthStr + "]超过当前长度类型[" + this + "]范围");
                 }
@@ -48,7 +49,7 @@ public enum FieldLengthType {
             // ASCII编码
             case LLVAR_ASCII:
             case LLLVAR_ASCII:
-                lengthStr = Integer.toString(dataLength);
+                lengthStr = Integer.toString(valueLength);
                 if (lengthStr.length() > lengthBytesCount) {
                     throw new Iso8583Exception("当前值长度[" + lengthStr + "]超过当前长度类型[" + this + "]范围");
                 }

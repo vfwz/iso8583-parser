@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -60,6 +61,14 @@ public class MessageFactory {
     }
 
     /**
+     * <p>获取指定索引的消息类型格式</p>
+     * 不存在的fieldType不会报错
+     */
+    public FieldType getFieldTypeMute(int index) {
+        return fieldTypeMap.get(index);
+    }
+
+    /**
      * <p>将接受到的一个字符串格式的消息报文转换为一个Iso8583Message对象。</p>
      * <p>ps:data 包含消息长度信息</p>
      */
@@ -90,7 +99,7 @@ public class MessageFactory {
         //创建一个factory.msgLength个长度的byte[]用于去读取报文长度信息
         byte[] dataLength = new byte[fieldType.getDataLength()];
         //目标信息数据
-        byte[] destData = new byte[0];
+        byte[] destData;
         try (ByteArrayInputStream bais = new ByteArrayInputStream(srcData)) {
             //读取长度信息
             bais.read(dataLength);
@@ -101,6 +110,7 @@ public class MessageFactory {
             bais.read(destData);
         } catch (IOException e) {
             log.error("解析报文失败", e);
+            throw new Iso8583Exception("解析报文失败", e);
         }
         return destData;
     }
@@ -152,5 +162,9 @@ public class MessageFactory {
 
     public int getFieldsCount() {
         return fieldsCount;
+    }
+
+    public Iterator<FieldType> getFieldTypeIterator() {
+        return this.fieldTypeMap.values().iterator();
     }
 }

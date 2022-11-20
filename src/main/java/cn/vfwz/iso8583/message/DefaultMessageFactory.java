@@ -6,8 +6,8 @@ import cn.vfwz.iso8583.message.field.FixedFieldType;
 import cn.vfwz.iso8583.message.field.VariableFieldType;
 
 import static cn.vfwz.iso8583.constant.FieldIndex.*;
-import static cn.vfwz.iso8583.enumeration.FieldValueType.*;
 import static cn.vfwz.iso8583.enumeration.FieldLengthType.*;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.*;
 
 
 /**

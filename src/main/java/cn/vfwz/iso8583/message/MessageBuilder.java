@@ -8,9 +8,8 @@ import java.util.TreeMap;
 
 public class MessageBuilder {
 
-    private Map<Integer, Field> fields = new TreeMap<>();
-
     private final MessageFactory factory;
+    private Map<Integer, Field> fields = new TreeMap<>();
 
     public MessageBuilder(MessageFactory factory) {
         this.factory = factory;
@@ -34,7 +33,6 @@ public class MessageBuilder {
     }
 
     public Message build(String hexMessage) {
-        Message message = factory.parse(hexMessage);
-        return message;
+        return factory.parse(hexMessage);
     }
 }

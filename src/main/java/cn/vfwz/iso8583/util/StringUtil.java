@@ -2,8 +2,8 @@ package cn.vfwz.iso8583.util;
 
 public class StringUtil {
 
-    public static String leftPad(String val, int targetLength, char c){
-        if(val == null || val.length() >= targetLength) {
+    public static String leftPad(String val, int targetLength, char c) {
+        if (val == null || val.length() >= targetLength) {
             return val;
         }
         StringBuilder sb = new StringBuilder(val);
@@ -13,8 +13,8 @@ public class StringUtil {
         return sb.toString();
     }
 
-    public static String rightPad(String val, int targetLength, char c){
-        if(val == null || val.length() >= targetLength) {
+    public static String rightPad(String val, int targetLength, char c) {
+        if (val == null || val.length() >= targetLength) {
             return val;
         }
         StringBuilder sb = new StringBuilder(val);

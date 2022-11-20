@@ -1,10 +1,12 @@
 package cn.vfwz.iso8583.message.field;
 
 import cn.vfwz.iso8583.enumeration.AlignType;
-import cn.vfwz.iso8583.enumeration.FieldValueType;
 import cn.vfwz.iso8583.enumeration.FieldLengthType;
+import cn.vfwz.iso8583.enumeration.FieldValueType;
 import cn.vfwz.iso8583.enumeration.TlvType;
 import cn.vfwz.iso8583.exception.Iso8583Exception;
+import cn.vfwz.iso8583.message.Message;
+import cn.vfwz.iso8583.message.MessageFactory;
 import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +50,8 @@ public abstract class FieldType {
      */
     protected char padChar = '0';
 
+    protected MessageFactory subMessageFactory = null;
+
     /**
      * TLV域的类型格式，默认不是TLV格式
      */
@@ -86,69 +90,183 @@ public abstract class FieldType {
 
     /**
      * 使用当前域格式从流中解析域
+     *
      * @param is 输入的报文流
      * @return 解析后的域
      */
     public Field decodeField(InputStream is) {
         try {
-            int dataLength;
-            byte[] lengthBytes;
-            if (this.fieldLengthType == FieldLengthType.FIXED) {
-                dataLength = this.getValueLength(null, charset);
-                lengthBytes = new byte[0];
-            } else {
-                lengthBytes = readBytes(is, this.fieldLengthType.getBytesCount());
-                dataLength = this.fieldLengthType.decode(lengthBytes);
-            }
-
-//            int valueBytesCount = getValueBytesCount(dataLength);
-            int valueBytesCount = this.fieldValueType.getBytesCount(dataLength);
-            byte[] valueBytes = readBytes(is, valueBytesCount);
-
-            String lengthHex = EncodeUtil.bytes2Hex(lengthBytes);
-            String valueHex = EncodeUtil.bytes2Hex(valueBytes);
+            int dataLength = getValueLength(is);
+            String lengthHex = getLengthHex(dataLength);
+            String valueHex = getValueHex(is, dataLength);
             String value = this.fieldValueType.decode(valueHex, dataLength, this.alignType, this.charset);
 
-            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
+            Message subMessage = null;
+            if (this.subMessageFactory != null) {
+                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
+                subMessage = this.subMessageFactory.parse(value);
+            }
+
+            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this, subMessage);
         } catch (Exception e) {
             log.error("解析域[{}]失败", this.fieldIndex, e);
             throw new Iso8583Exception(e);
         }
     }
 
-    public Field encodeField(String data) {
+    /**
+     * 使用当前域格式从hex格式的域值解析域
+     *
+     * @param valueHex hex格式报文值
+     * @return 解析后的域
+     */
+    public Field decodeField(String valueHex) {
         try {
-            int valueLength = getValueLength(data, charset);
+            int valueLength = this.getValueLengthFromValueHex(valueHex);
+            String lengthHex = this.fieldLengthType.encode(valueLength);
+            String value = this.fieldValueType.decode(valueHex, valueLength, this.alignType, this.charset);
+            Message subMessage = null;
+            if (this.subMessageFactory != null) {
+                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
+                subMessage = this.subMessageFactory.parse(value);
+            }
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
+        } catch (Exception e) {
+            log.error("解析域[{}]失败", this.fieldIndex, e);
+            throw new Iso8583Exception(e);
+        }
+    }
+
+    public Field encodeField(String value) {
+        try {
+            int valueLength = getValueLength(value, charset);
             String lengthHex = this.fieldLengthType.encode(valueLength);
             String valueHex = "";
             if (valueLength == 0) {
                 if (this.fieldLengthType != FieldLengthType.FIXED) {
-                    log.info("当前域[{}]为变长域[{}]，但是数据长度为0，请检查", this.fieldIndex, this.fieldValueType);
+                    log.warn("当前域[{}]为变长域，但是数据长度为0，请检查", this);
                 }
             } else {
-                valueHex = this.fieldValueType.encode(data, valueLength, this.alignType, this.padChar, this.charset);
+                valueHex = this.fieldValueType.encode(value, valueLength, this.alignType, this.padChar, this.charset);
             }
-            return new Field(this.getFieldIndex(), valueLength, data, lengthHex, valueHex, this);
+            Message subMessage = null;
+            if (this.subMessageFactory != null) {
+                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
+                subMessage = this.subMessageFactory.parse(value);
+            }
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
         } catch (Exception e) {
-            log.error("组装域[{}]时发生异常, data[{}], lengthType[{}], valueType[{}]", data, this.fieldIndex, this.fieldLengthType, this.fieldValueType);
+            log.error("组装域[{}]时发生异常, value[{}], lengthType[{}], valueType[{}]", value, this.fieldIndex, this.fieldLengthType, this.fieldValueType);
             throw new Iso8583Exception(e);
         }
     }
 
     /**
-     * 根据域值的Hex值获取实际数据长度
+     * 使用子域报文获取域值
+     *
+     * @param subMessage 子域报文信息
+     * @return 解析后的域
+     */
+    public Field encodeField(Message subMessage) {
+        if (this.subMessageFactory == null) {
+            throw new Iso8583Exception("当前域值类型[" + this + "]没有配置子域格式");
+        }
+        if (subMessage == null) {
+            throw new Iso8583Exception("subMessage is null, 无法解析域, 域值类型[" + this + "]");
+        }
+
+        try {
+            String subMessageHexString = subMessage.getHexString();
+            int valueLength = this.fieldValueType.getValueLengthFromValueHex(subMessageHexString);
+            String lengthHex = this.fieldLengthType.encode(valueLength);
+
+            String valueHex = this.fieldValueType.pad(subMessageHexString, 0, this.alignType, this.padChar, this.charset);
+            String value = this.fieldValueType.decode(valueHex, valueLength, this.alignType, this.charset);
+
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
+        } catch (Exception e) {
+            log.error("通过子域组装域[{}]时发生异常", this);
+            throw new Iso8583Exception(e);
+        }
+    }
+
+    /**
+     *
      */
     protected abstract int getValueLength(String value, Charset charset);
+
+
+    /**
+     * 从流中获得当前域的长度
+     *
+     * @param inputStream 报文流
+     * @return 当前域值长度
+     */
+    protected abstract int getValueLength(InputStream inputStream);
+
+    protected abstract String getLengthHex(int valueLength);
+
+    /**
+     * 从数据流中读取当前域值的Hex形式数据
+     *
+     * @param inputStream 报文流
+     * @param valueLength 域值的长度
+     * @return hex形式的域值
+     */
+    protected String getValueHex(InputStream inputStream, int valueLength) {
+        int valueBytesCount = this.fieldValueType.getBytesCount(valueLength);
+        byte[] valueBytes = readBytes(inputStream, valueBytesCount);
+
+        return EncodeUtil.bytes2Hex(valueBytes);
+    }
+
+    /**
+     * 根据域值的Hex值获取实际数据长度
+     *
+     * @param valueHex hex形式的域值
+     * @return 域的实际长度
+     */
+    protected abstract int getValueLengthFromValueHex(String valueHex);
 
     public int getFieldIndex() {
         return fieldIndex;
     }
 
-    protected byte[] readBytes(InputStream is, int bytesLen) throws IOException {
+    protected byte[] readBytes(InputStream is, int bytesLen) {
         byte[] bytes = new byte[bytesLen];
-        is.read(bytes);
+        try {
+            int read = is.read(bytes);
+        } catch (IOException e) {
+            throw new Iso8583Exception("读取报文流失败", e);
+        }
         return bytes;
     }
 
+    public FieldType setSubMessageFactory(MessageFactory subMessageFactory) {
+        this.subMessageFactory = subMessageFactory;
+        return this;
+    }
 
+
+    public FieldLengthType getFieldLengthType() {
+        return fieldLengthType;
+    }
+
+    public FieldValueType getFieldValueType() {
+        return fieldValueType;
+    }
+
+    @Override
+    public String toString() {
+        return "FieldType{" +
+                "fieldLengthType=" + fieldLengthType +
+                ", fieldValueType=" + fieldValueType +
+                ", fieldIndex=" + fieldIndex +
+                ", charset=" + charset +
+                ", alignType=" + alignType +
+                ", padChar=" + padChar +
+                ", subMessageFactory=" + subMessageFactory +
+                ", tlvType=" + tlvType +
+                '}';
+    }
 }

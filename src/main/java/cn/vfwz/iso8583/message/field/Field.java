@@ -15,6 +15,7 @@
  */
 package cn.vfwz.iso8583.message.field;
 
+import cn.vfwz.iso8583.message.Message;
 import cn.vfwz.iso8583.util.EncodeUtil;
 
 /**
@@ -48,10 +49,8 @@ public class Field implements Comparable<Field> {
      */
     private final FieldType fieldType;
 
-    /**
-     * <p>构造函数</p>
-     * 不可变数据，只能通过构造函数生成
-     */
+    private final Message subMessage;
+
     public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType) {
         this.index = index;
         this.length = length;
@@ -59,6 +58,21 @@ public class Field implements Comparable<Field> {
         this.lengthHex = lengthHex;
         this.valueHex = valueHex;
         this.fieldType = fieldType;
+        this.subMessage = null;
+    }
+
+    /**
+     * <p>构造函数</p>
+     * 不可变数据，只能通过构造函数生成
+     */
+    public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType, Message subMessage) {
+        this.index = index;
+        this.length = length;
+        this.value = value;
+        this.lengthHex = lengthHex;
+        this.valueHex = valueHex;
+        this.fieldType = fieldType;
+        this.subMessage = subMessage;
     }
 
     /**
@@ -73,6 +87,10 @@ public class Field implements Comparable<Field> {
      */
     public String getValue() {
         return value;
+    }
+
+    public String getSubValue(int index) {
+        return subMessage == null ? null : subMessage.getValue(index);
     }
 
     /**
@@ -98,6 +116,10 @@ public class Field implements Comparable<Field> {
         return EncodeUtil.hex2Bytes(this.valueHex);
     }
 
+    public Message getSubMessage() {
+        return subMessage;
+    }
+
     @Override
     public int compareTo(Field field) {
         return this.index - field.index;
@@ -105,7 +127,18 @@ public class Field implements Comparable<Field> {
 
     @Override
     public String toString() {
-        return "Iso8583IsoField [index=" + index + ", value=" + value + ", fieldType=" + fieldType + "]";
+        String ret = "Field{" +
+                "index=" + index +
+                ", length=" + length +
+                ", value='" + value + '\'' +
+                ", valueHex='" + valueHex + '\'' +
+                ", lengthHex='" + lengthHex + '\'' +
+                ", fieldType=" + fieldType;
+        if (subMessage != null) {
+            ret += ", subMessage=\n" + subMessage.toFormatString(Integer.toString(index)) + "\n";
+        }
+        ret += '}';
+        return ret;
     }
 
     @Override

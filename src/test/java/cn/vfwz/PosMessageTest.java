@@ -1,20 +1,19 @@
 package cn.vfwz;
 
 import cn.vfwz.iso8583.constant.FieldIndex;
-import cn.vfwz.iso8583.message.DefaultMessageFactory;
-import cn.vfwz.iso8583.message.Message;
-import cn.vfwz.iso8583.message.MessageBuilder;
-import cn.vfwz.iso8583.message.MessageFactory;
+import cn.vfwz.iso8583.message.*;
 import cn.vfwz.iso8583.message.field.Field;
+import cn.vfwz.iso8583.message.field.FixedFieldType;
 import cn.vfwz.iso8583.message.field.VariableFieldType;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Iterator;
 
-import static cn.vfwz.iso8583.constant.FieldIndex.F59;
-import static cn.vfwz.iso8583.enumeration.FieldValueType.ASCII;
+import static cn.vfwz.iso8583.constant.FieldIndex.*;
 import static cn.vfwz.iso8583.enumeration.FieldLengthType.LLLVAR;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.ASCII;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.BCD;
 
 public class PosMessageTest {
 
@@ -40,7 +39,7 @@ public class PosMessageTest {
         // 根据解析的报文再组装报文
         MessageBuilder builder2 = new MessageBuilder(factory);
         Iterator<Field> fieldIterator = requestMessage.getFieldIterator();
-        while(fieldIterator.hasNext()) {
+        while (fieldIterator.hasNext()) {
             Field field = fieldIterator.next();
             builder2.setField(field.getIndex(), field.getValue());
         }
@@ -60,7 +59,6 @@ public class PosMessageTest {
         System.out.println(" third:" + messageHexThird);
 
         Assert.assertEquals(messageHexOrigin, messageHexThird.substring(4));
-
 
 
     }
@@ -96,6 +94,28 @@ public class PosMessageTest {
     }
 
     @Test
+    public void subFieldDecode() {
+        MessageFactory factory = DefaultMessageFactory.produce();
+        // 2200072700060
+
+        BcdSubMessageFactory f22SubMessageFactory = new BcdSubMessageFactory();
+        f22SubMessageFactory.set(new FixedFieldType(1, 2, BCD))
+                .set(new FixedFieldType(2, 1, BCD))
+                .set(new FixedFieldType(3, 1, BCD));
+        factory.getFieldType(F22).setSubMessageFactory(f22SubMessageFactory);
+
+        BcdSubMessageFactory f60SubMessageFactory = new BcdSubMessageFactory();
+        f60SubMessageFactory.set(new FixedFieldType(1, 1, BCD))
+                .set(new FixedFieldType(2, 2, BCD))
+                .set(new FixedFieldType(3, 3, BCD))
+                .set(new FixedFieldType(4, 7, BCD).setSubMessageFactory(f22SubMessageFactory));
+        factory.getFieldType(F60).setSubMessageFactory(f60SubMessageFactory);
+
+        Message message = factory.parse(PAY_RESPONSE);
+        System.out.println(message.toFormatString());
+    }
+
+    @Test
     public void encodePayRequestMessage() {
         MessageFactory factory = DefaultMessageFactory.produce();
         factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
@@ -112,7 +132,7 @@ public class PosMessageTest {
         builder.setField(FieldIndex.F12, "141556");
         builder.setField(FieldIndex.F13, "0824");
         builder.setField(FieldIndex.F14, "2903");
-        builder.setField(FieldIndex.F22, "071");
+        builder.setField(F22, "071");
         builder.setField(FieldIndex.F23, "001");
         builder.setField(FieldIndex.F25, "00");
         builder.setField(FieldIndex.F26, "12");
@@ -188,7 +208,6 @@ public class PosMessageTest {
 
         Assert.assertEquals(responseHex, responseHex2);
     }
-
 
 
     @Test

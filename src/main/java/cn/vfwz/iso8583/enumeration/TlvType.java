@@ -6,6 +6,4 @@ public enum TlvType {
     UNION, // 银联标准TLV格式
     F46; // 46域特定TLV格式
 
-
-
 }

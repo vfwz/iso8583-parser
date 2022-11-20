@@ -1,9 +1,10 @@
 package cn.vfwz.iso8583.message.field;
 
 import cn.vfwz.iso8583.enumeration.AlignType;
-import cn.vfwz.iso8583.enumeration.FieldValueType;
 import cn.vfwz.iso8583.enumeration.FieldLengthType;
+import cn.vfwz.iso8583.enumeration.FieldValueType;
 
+import java.io.InputStream;
 import java.nio.charset.Charset;
 
 /**
@@ -48,6 +49,21 @@ public class FixedFieldType extends FieldType {
         return this.dataLength;
     }
 
+    @Override
+    protected int getValueLength(InputStream inputStream) {
+        return this.dataLength;
+    }
+
+    @Override
+    protected String getLengthHex(int valueLength) {
+        // 定长域没有长度部分
+        return "";
+    }
+
+    @Override
+    protected int getValueLengthFromValueHex(String valueHex) {
+        return this.dataLength;
+    }
 
 
 }

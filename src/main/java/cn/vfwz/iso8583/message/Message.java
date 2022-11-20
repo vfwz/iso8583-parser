@@ -4,6 +4,7 @@ import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.FieldType;
 import cn.vfwz.iso8583.util.EncodeUtil;
+import cn.vfwz.iso8583.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
@@ -17,11 +18,11 @@ public class Message {
     /**
      * <p>自身所拥有的一个报文格式工厂</p>
      */
-    private MessageFactory factory;
+    private final MessageFactory factory;
     /**
      * <p>当前报文所对应的一个bitmap 64/128 域规范由本身持有的factory.isBit128()方法决定</p>
      */
-    private byte[] bitmap;
+    private final byte[] bitmap;
     private Map<Integer, Field> fields = new TreeMap<>();
 
     /**
@@ -39,9 +40,7 @@ public class Message {
     protected void setFields(Map<Integer, Field> fields) {
         // 根据新的fields 更新bitmap，msgLength等域
         this.fields = fields;
-        // 先刷新bitmap
-        refreshBitMap();
-        refreshMsgLength();
+        refresh();
     }
 
     /**
@@ -51,22 +50,22 @@ public class Message {
     public void updateValue(int index, String value) {
         FieldType type = factory.getFieldType(index);
         putField(type.encodeField(value));
-        refreshBitMap();
-        refreshMsgLength();
+        refresh();
     }
 
     public void removeField(int index) {
         //将数据填入map，已处理填充位数据
         if (fields.containsKey(index)) {
             fields.remove(index);
-            //位图标记
-            refreshBitMap();
-            refreshMsgLength();
+            refresh();
         } else {
             log.info("当前报文中包含域[{}]", index);
         }
     }
 
+    /**
+     * 私有方法，只设置了域，在完成一系列设置后一定要调用refresh()方法
+     */
     private void putField(Field field) {
         //将数据填入map，已处理填充位数据
         fields.put(field.getIndex(), field);
@@ -110,6 +109,16 @@ public class Message {
     }
 
     /**
+     * 报文域发生变动时，刷新bitMap和msgLength域
+     * 有些情况bitmap还未生成，需要需要先刷新bitmap
+     */
+    private void refresh() {
+        //位图标记
+        refreshBitMap();
+        refreshMsgLength();
+    }
+
+    /**
      * 当报文域发生变动时，需要刷新报文长度信息
      */
     private void refreshMsgLength() {
@@ -120,10 +129,13 @@ public class Message {
             }
             msgLength += (field.getLengthHex().length() / 2 + field.getValueHex().length() / 2);
         }
-        Field msgLengthField = this.factory
-                .getFieldType(FieldIndex.TOTAL_MESSAGE_LENGTH)
-                .encodeField(Integer.toHexString(msgLength));
-        this.putField(msgLengthField);
+        FieldType fieldType = this.factory.getFieldTypeMute(FieldIndex.TOTAL_MESSAGE_LENGTH);
+        if (fieldType == null) {
+            log.debug("未配置messageLength域，无需刷新");
+        } else {
+            Field msgLengthField = fieldType.encodeField(Integer.toHexString(msgLength));
+            this.putField(msgLengthField);
+        }
     }
 
     /**
@@ -136,10 +148,13 @@ public class Message {
             }
             bitmap[field.getIndex() - 1] = 1;
         }
-        Field bitMapField = this.factory
-                .getFieldType(FieldIndex.BITMAP)
-                .encodeField(EncodeUtil.bytes2Hex(getBitmapBytes()));
-        this.putField(bitMapField);
+        FieldType fieldTypeMute = this.factory.getFieldTypeMute(FieldIndex.BITMAP);
+        if (fieldTypeMute == null) {
+            log.debug("未配置bitmap域，无需刷新");
+        } else {
+            Field bitMapField = fieldTypeMute.encodeField(EncodeUtil.bytes2Hex(getBitmapBytes()));
+            this.putField(bitMapField);
+        }
     }
 
     /**
@@ -159,13 +174,33 @@ public class Message {
      * @Description: 格式化消息输出
      */
     public String toFormatString() {
+        return toFormatString(null);
+    }
+
+    public String toFormatString(String parentFieldName) {
         StringBuilder sb = new StringBuilder();
-        String format = "F%s:[%s][%s]";
+        String format = "%s][%s][%s][%s][%s]";
+        int bitMapLength = this.bitmap == null ? 0 : bitmap.length;
+        int formatIndexLength = 1;
+        while ((bitMapLength /= 10) > 0) {
+            formatIndexLength++;
+        }
+
         for (Map.Entry<Integer, Field> entry : fields.entrySet()) {
             Field field = entry.getValue();
-            String index = (field.getIndex() >= 0 && field.getIndex() < 10) ? "0" + field.getIndex() : Integer.toString(field.getIndex());
-            sb.append(String.format(format, index, field.getLength(), field.getValue()));
+            Integer fieldIndex = field.getIndex();
+            String fieldName;
+            if (parentFieldName == null) {
+                fieldName = "[F" + StringUtil.leftPad(Integer.toString(field.getIndex()), formatIndexLength, '0');
+            } else {
+                fieldName = " " + parentFieldName + "." + fieldIndex;
+            }
+            FieldType fieldType = field.getFieldType();
+            sb.append(String.format(format, fieldName, fieldType.getFieldLengthType(), fieldType.getFieldValueType(), field.getLength(), field.getValue()));
             sb.append("\n");
+            if (field.getSubMessage() != null) {
+                sb.append(field.getSubMessage().toFormatString(fieldName));
+            }
         }
         return sb.toString();
     }
@@ -218,8 +253,12 @@ public class Message {
      * <p>获取校验域的字符串形式值</p>
      */
     public String getMacString() {
-        Field field = fields.get(FieldIndex.F64);
-        return field.getValueHex();
+        if(this.bitmap == null) {
+            return null;
+        }
+        // 拿最后一个域
+        Field field = fields.get(this.bitmap.length);
+        return field == null? null: field.getValueHex();
     }
 
     /**
