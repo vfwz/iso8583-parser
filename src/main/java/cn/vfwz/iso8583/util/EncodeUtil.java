@@ -12,13 +12,14 @@ public class EncodeUtil {
 
     protected static final char[] BINARY = new char[]{'0', '1'};
 
+
     //传入参数为只有01的字符串
     public static byte[] binary(String binaryStr) {
         //长度不是8倍数的话，无法知道在左边或右边补零，会引起歧义，导致结果不正确
         if (binaryStr.length() % 8 != 0) {
             throw new IllegalArgumentException("传入的参数长度必须是8的倍数");
         }
-        StringBuffer accum = new StringBuffer();
+        StringBuilder accum = new StringBuilder();
         for (int i = 0; i < binaryStr.length(); i += 4) {
             String temp = binaryStr.substring(i, i + 4);
             int value = 0;
@@ -49,7 +50,7 @@ public class EncodeUtil {
     }
 
     public static String binary(byte[] bts) {
-        StringBuffer accum = new StringBuffer();
+        StringBuilder accum = new StringBuilder();
         for (byte bt : bts) {
             accum.append(binary(bt));
         }

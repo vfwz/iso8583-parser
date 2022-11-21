@@ -15,14 +15,16 @@
  */
 package cn.vfwz.iso8583.message.field;
 
-import cn.vfwz.iso8583.message.Message;
 import cn.vfwz.iso8583.util.EncodeUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 8583报文域抽象，不可变类
  */
+@Slf4j
 public class Field implements Comparable<Field> {
 
+    protected Field parentField;
     /**
      * 报文字段索引
      */
@@ -49,30 +51,29 @@ public class Field implements Comparable<Field> {
      */
     private final FieldType fieldType;
 
-    private final Message subMessage;
+//    private final String tagName; // TLV格式域 tag信息
+//
+////    private final Message subMessage;
+//    private final Map<Integer, Field> subFields = new TreeMap<>(); // 子域信息
 
     public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType) {
+        this.parentField = null;
         this.index = index;
         this.length = length;
         this.value = value;
         this.lengthHex = lengthHex;
         this.valueHex = valueHex;
         this.fieldType = fieldType;
-        this.subMessage = null;
     }
 
-    /**
-     * <p>构造函数</p>
-     * 不可变数据，只能通过构造函数生成
-     */
-    public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType, Message subMessage) {
+    public Field(Field parentField, int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType) {
+        this.parentField = parentField;
         this.index = index;
         this.length = length;
         this.value = value;
         this.lengthHex = lengthHex;
         this.valueHex = valueHex;
         this.fieldType = fieldType;
-        this.subMessage = subMessage;
     }
 
     /**
@@ -87,10 +88,6 @@ public class Field implements Comparable<Field> {
      */
     public String getValue() {
         return value;
-    }
-
-    public String getSubValue(int index) {
-        return subMessage == null ? null : subMessage.getValue(index);
     }
 
     /**
@@ -116,8 +113,22 @@ public class Field implements Comparable<Field> {
         return EncodeUtil.hex2Bytes(this.valueHex);
     }
 
-    public Message getSubMessage() {
-        return subMessage;
+    public void setParentField(Field parentField) {
+        this.parentField = parentField;
+    }
+
+    /**
+     * 获取当前域的索引，带父域
+     */
+    public String getIndexString() {
+        StringBuilder isb = new StringBuilder();
+        if (this.parentField != null) {
+            isb.append(this.parentField.getIndexString());
+            isb.append(".");
+        }
+
+        isb.append(this.index);
+        return isb.toString();
     }
 
     @Override
@@ -127,18 +138,15 @@ public class Field implements Comparable<Field> {
 
     @Override
     public String toString() {
-        String ret = "Field{" +
-                "index=" + index +
+        return "Field{" +
+                "parentField=" + parentField +
+                ", index=" + index +
                 ", length=" + length +
                 ", value='" + value + '\'' +
                 ", valueHex='" + valueHex + '\'' +
                 ", lengthHex='" + lengthHex + '\'' +
-                ", fieldType=" + fieldType;
-        if (subMessage != null) {
-            ret += ", subMessage=\n" + subMessage.toFormatString(Integer.toString(index)) + "\n";
-        }
-        ret += '}';
-        return ret;
+                ", fieldType=" + fieldType +
+                '}';
     }
 
     @Override

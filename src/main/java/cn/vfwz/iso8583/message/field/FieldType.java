@@ -101,13 +101,13 @@ public abstract class FieldType {
             String valueHex = getValueHex(is, dataLength);
             String value = this.fieldValueType.decode(valueHex, dataLength, this.alignType, this.charset);
 
-            Message subMessage = null;
-            if (this.subMessageFactory != null) {
-                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
-                subMessage = this.subMessageFactory.parse(value);
+            MessageFactory subMessageFactory = this.getSubMessageFactory();
+            if(subMessageFactory != null) {
+                log.debug("该域[{}]包含子域，初始化为SubField类型", fieldIndex);
+                return new SubField(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
             }
 
-            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this, subMessage);
+            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
         } catch (Exception e) {
             log.error("解析域[{}]失败", this.fieldIndex, e);
             throw new Iso8583Exception(e);
@@ -125,12 +125,8 @@ public abstract class FieldType {
             int valueLength = this.getValueLengthFromValueHex(valueHex);
             String lengthHex = this.fieldLengthType.encode(valueLength);
             String value = this.fieldValueType.decode(valueHex, valueLength, this.alignType, this.charset);
-            Message subMessage = null;
-            if (this.subMessageFactory != null) {
-                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
-                subMessage = this.subMessageFactory.parse(value);
-            }
-            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
+
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this);
         } catch (Exception e) {
             log.error("解析域[{}]失败", this.fieldIndex, e);
             throw new Iso8583Exception(e);
@@ -149,12 +145,7 @@ public abstract class FieldType {
             } else {
                 valueHex = this.fieldValueType.encode(value, valueLength, this.alignType, this.padChar, this.charset);
             }
-            Message subMessage = null;
-            if (this.subMessageFactory != null) {
-                log.debug("域配置[{}]存在子域配置, 根据配置解析子域", this);
-                subMessage = this.subMessageFactory.parse(value);
-            }
-            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this);
         } catch (Exception e) {
             log.error("组装域[{}]时发生异常, value[{}], lengthType[{}], valueType[{}]", value, this.fieldIndex, this.fieldLengthType, this.fieldValueType);
             throw new Iso8583Exception(e);
@@ -183,7 +174,7 @@ public abstract class FieldType {
             String valueHex = this.fieldValueType.pad(subMessageHexString, 0, this.alignType, this.padChar, this.charset);
             String value = this.fieldValueType.decode(valueHex, valueLength, this.alignType, this.charset);
 
-            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this, subMessage);
+            return new Field(this.getFieldIndex(), valueLength, value, lengthHex, valueHex, this);
         } catch (Exception e) {
             log.error("通过子域组装域[{}]时发生异常", this);
             throw new Iso8583Exception(e);
@@ -254,6 +245,10 @@ public abstract class FieldType {
 
     public FieldValueType getFieldValueType() {
         return fieldValueType;
+    }
+
+    public MessageFactory getSubMessageFactory() {
+        return subMessageFactory;
     }
 
     @Override

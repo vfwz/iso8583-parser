@@ -3,6 +3,7 @@ package cn.vfwz.iso8583.message;
 import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.FieldType;
+import cn.vfwz.iso8583.message.field.SubField;
 import cn.vfwz.iso8583.util.EncodeUtil;
 import cn.vfwz.iso8583.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -174,32 +175,21 @@ public class Message {
      * @Description: 格式化消息输出
      */
     public String toFormatString() {
-        return toFormatString(null);
-    }
-
-    public String toFormatString(String parentFieldName) {
         StringBuilder sb = new StringBuilder();
-        String format = "%s][%s][%s][%s][%s]";
-        int bitMapLength = this.bitmap == null ? 0 : bitmap.length;
-        int formatIndexLength = 1;
-        while ((bitMapLength /= 10) > 0) {
-            formatIndexLength++;
-        }
+        String format = "[F%s][%s][%s][%s][%s]";
 
         for (Map.Entry<Integer, Field> entry : fields.entrySet()) {
             Field field = entry.getValue();
-            Integer fieldIndex = field.getIndex();
-            String fieldName;
-            if (parentFieldName == null) {
-                fieldName = "[F" + StringUtil.leftPad(Integer.toString(field.getIndex()), formatIndexLength, '0');
-            } else {
-                fieldName = " " + parentFieldName + "." + fieldIndex;
-            }
             FieldType fieldType = field.getFieldType();
-            sb.append(String.format(format, fieldName, fieldType.getFieldLengthType(), fieldType.getFieldValueType(), field.getLength(), field.getValue()));
+            sb.append(String.format(format, field.getIndexString(), fieldType.getFieldLengthType(), fieldType.getFieldValueType(), field.getLength(), field.getValue()));
             sb.append("\n");
-            if (field.getSubMessage() != null) {
-                sb.append(field.getSubMessage().toFormatString(fieldName));
+            if (field instanceof SubField) {
+                SubField subField = (SubField)field;
+                subField.getSubFieldIterator().forEachRemaining(each -> {
+                    FieldType eachFieldType = each.getFieldType();
+                    sb.append(String.format(format, each.getIndexString(), eachFieldType.getFieldLengthType(), eachFieldType.getFieldValueType(), each.getLength(), each.getValue()));
+                });
+                sb.append("\n");
             }
         }
         return sb.toString();

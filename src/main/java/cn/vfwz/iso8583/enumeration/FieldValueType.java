@@ -56,23 +56,16 @@ public enum FieldValueType {
             throw new Iso8583Exception("注入的值[" + hexData + "]长度超过目标长度[" + targetHexLength + "]");
         } else if (hexData.length() == targetHexLength) { // 长度符合，无需填充
             valueHex = hexData;
-        } else { //(hexData.length() < targetHexLength) {
+        } else { // (hexData.length() < targetHexLength) {
             log.debug("域数据类型[{}], 当前值hex形式长度[{}]与目标长度[{}]不一致，根据填充方案alignType[{}], padChar[{}]进行填充",
                     this, hexData.length(), targetHexLength,
                     alignType, padChar);
             String c = String.valueOf(padChar);
             // 字符类型域转换时直接拼接字面字符
-            if (FieldValueType.ASCII == this) {
+            if (this == ASCII) {
                 c = EncodeUtil.bytes2Hex(c.getBytes(charset));
             }
-            valueHex = hexData;
-            while (valueHex.length() < targetHexLength) {
-                if (AlignType.RIGHT == alignType) {
-                    valueHex = c + valueHex;
-                } else {
-                    valueHex = valueHex + c;
-                }
-            }
+            valueHex = alignType.pad(hexData, targetHexLength, c);
             if (valueHex.length() != targetHexLength) {
                 throw new Iso8583Exception("Hex域值[" + hexData + "]经过填充方案alignType[" + alignType + "], padChar[" + padChar + "]填充后，" +
                         "结果[" + hexData + "长度超出预估值[" + targetHexLength + "]");
@@ -95,7 +88,7 @@ public enum FieldValueType {
         switch (this) {
             case BCD:
                 value = valueHex;
-                value = removePad(value, valueLength, alignType);
+                value = alignType.removePad(value, valueLength);
                 break;
             case HEX:
                 value = valueHex;
@@ -107,28 +100,6 @@ public enum FieldValueType {
                 throw new Iso8583Exception("暂不支持的域值类型[" + this + "]");
         }
         return value;
-    }
-
-
-    /**
-     * 根据设定的域值长度去除对齐补位的字符
-     * 如奇数个数的BCD数据
-     *
-     * @param value        域值
-     * @param targetLength 目标长度
-     * @param alignType    对齐方式
-     * @return 去除对齐字符后的实际值
-     */
-    private String removePad(String value, int targetLength, AlignType alignType) {
-        if (value == null || value.isEmpty() || value.length() <= targetLength) {
-            return value;
-        }
-        int valLen = value.length();
-        if (AlignType.LEFT == alignType) { // 左对齐，右边截取掉
-            return value.substring(0, targetLength);
-        } else { // 右对齐，左边截取掉
-            return value.substring(valLen - targetLength);
-        }
     }
 
     /**
