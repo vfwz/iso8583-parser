@@ -28,22 +28,23 @@ public class PosMessageTest {
 
     private void checkMessageDecodeAndEncode(String messageHexOrigin) {
         // 解析源报文
-        MessageFactory factory = DefaultMessageFactory.produce();
-        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
-        MessageBuilder builder = new MessageBuilder(factory);
+        MessageConfig config = DefaultMessageConfig.produce();
+        config.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
-        Message requestMessage = builder.build(messageHexOrigin);
+        MessageDecoder decoder = new MessageDecoder(config);
+
+        Message requestMessage = decoder.decode(messageHexOrigin);
         System.out.println(requestMessage.toFormatString());
         System.out.println("origin:" + messageHexOrigin);
 
         // 根据解析的报文再组装报文
-        MessageBuilder builder2 = new MessageBuilder(factory);
+        MessageEncoder encoder2 = new MessageEncoder(config);
         Iterator<Field> fieldIterator = requestMessage.getFieldIterator();
         while (fieldIterator.hasNext()) {
             Field field = fieldIterator.next();
-            builder2.setField(field.getIndex(), field.getValue());
+            encoder2.setField(field.getIndex(), field.getValue());
         }
-        Message requestMessageAfter = builder2.build();
+        Message requestMessageAfter = encoder2.encode();
         String messageHexAfter = requestMessageAfter.getHexString();
         System.out.println(" after:" + messageHexAfter);
         System.out.println(requestMessageAfter.toFormatString());
@@ -53,7 +54,7 @@ public class PosMessageTest {
 
 
         // 再解析一遍组装后的报文
-        Message requestMessageThird = factory.parseWithMsgLength(messageHexAfter);
+        Message requestMessageThird = decoder.decodeWithMsgLength(messageHexAfter);
         String messageHexThird = requestMessageThird.getHexString();
         System.out.println(requestMessageThird.toFormatString());
         System.out.println(" third:" + messageHexThird);
@@ -95,33 +96,33 @@ public class PosMessageTest {
 
     @Test
     public void subFieldDecode() {
-        MessageFactory factory = DefaultMessageFactory.produce();
+        MessageConfig config = DefaultMessageConfig.produce();
         // 2200072700060
-
-        BcdSubMessageFactory f22SubMessageFactory = new BcdSubMessageFactory();
-        f22SubMessageFactory.set(new FixedFieldType(1, 2, BCD))
-                .set(new FixedFieldType(2, 1, BCD))
-                .set(new FixedFieldType(3, 1, BCD));
-        factory.getFieldType(F22).setSubMessageFactory(f22SubMessageFactory);
-
-        BcdSubMessageFactory f60SubMessageFactory = new BcdSubMessageFactory();
-        f60SubMessageFactory.set(new FixedFieldType(1, 1, BCD))
-                .set(new FixedFieldType(2, 2, BCD))
-                .set(new FixedFieldType(3, 3, BCD))
-                .set(new FixedFieldType(4, 7, BCD).setSubMessageFactory(f22SubMessageFactory));
-        factory.getFieldType(F60).setSubMessageFactory(f60SubMessageFactory);
-
-        Message message = factory.parse(PAY_RESPONSE);
-        System.out.println(message.toFormatString());
+// ----------- 换一种实现思路
+//        BcdSubMessageDecoder decoder = new BcdSubMessageDecoder();
+//        decoder.set(new FixedFieldType(1, 2, BCD))
+//                .set(new FixedFieldType(2, 1, BCD))
+//                .set(new FixedFieldType(3, 1, BCD));
+//        config.getFieldType(F22).setSubMessageFactory(decoder);
+//
+//        BcdSubMessageDecoder f60SubMessageFactory = new BcdSubMessageDecoder();
+//        f60SubMessageFactory.set(new FixedFieldType(1, 1, BCD))
+//                .set(new FixedFieldType(2, 2, BCD))
+//                .set(new FixedFieldType(3, 3, BCD))
+//                .set(new FixedFieldType(4, 7, BCD).setSubMessageFactory(decoder));
+//        config.getFieldType(F60).setSubMessageFactory(f60SubMessageFactory);
+//
+//        Message message = config.decode(PAY_RESPONSE);
+//        System.out.println(message.toFormatString());
     }
 
     @Test
     public void encodePayRequestMessage() {
-        MessageFactory factory = DefaultMessageFactory.produce();
-        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+        MessageConfig config = DefaultMessageConfig.produce();
+        config.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
-//        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        MessageBuilder builder = new MessageBuilder(factory);
+//        Iso8583Message requestMessage = config.parseWithoutMsgLength(PAY_REQUEST);
+        MessageEncoder builder = new MessageEncoder(config);
         builder.setField(FieldIndex.TPDU, "6000030000");
         builder.setField(FieldIndex.HEAD, "603100310100");
         builder.setField(FieldIndex.MTI, "0200");
@@ -147,13 +148,14 @@ public class PosMessageTest {
         builder.setField(FieldIndex.F62, "FF02213436307C30307C32383638387C3433323232383439");
         builder.setField(FieldIndex.F63, "534D303136CDC489E91786D0BE01F543D813611BCD");
         builder.setField(FieldIndex.F64, "3833353932373435");
-        Message requestMessage = builder.build();
+        Message requestMessage = builder.encode();
 
         System.out.println(requestMessage.toFormatString());
         String requestHex = requestMessage.getHexString();
         System.out.println(requestHex);
 
-        Message requestMessage2 = factory.parseWithMsgLength(requestHex);
+        MessageDecoder decoder = new MessageDecoder(config);
+        Message requestMessage2 = decoder.decodeWithMsgLength(requestHex);
         System.out.println(requestMessage2.getHexString());
         System.out.println(requestMessage2.toFormatString());
     }
@@ -161,46 +163,47 @@ public class PosMessageTest {
 
     @Test
     public void encodePayResponseMessage() {
-        MessageFactory factory = DefaultMessageFactory.produce();
-        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+        MessageConfig config = DefaultMessageConfig.produce();
+        config.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
 //        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        MessageBuilder builder = new MessageBuilder(factory);
-        builder.setField(FieldIndex.TPDU, "6000030000");
-        builder.setField(FieldIndex.HEAD, "603100310100");
-        builder.setField(FieldIndex.MTI, "0210");
-        builder.setField(FieldIndex.F2, "6224242300000069");
-        builder.setField(FieldIndex.F3, "000000");
-        builder.setField(FieldIndex.F4, "1111");
-        builder.setField(FieldIndex.F11, "000079");
-        builder.setField(FieldIndex.F12, "141556");
-        builder.setField(FieldIndex.F13, "0824");
-        builder.setField(FieldIndex.F14, "2903");
-        builder.setField(FieldIndex.F23, "000");
-        builder.setField(FieldIndex.F25, "00");
-        builder.setField(FieldIndex.F26, "12");
-        builder.setField(FieldIndex.F32, "48431665");
-        builder.setField(FieldIndex.F37, "X00004002761");
-        builder.setField(FieldIndex.F38, "650852");
-        builder.setField(FieldIndex.F39, "00");
-        builder.setField(FieldIndex.F41, "10016919");
-        builder.setField(FieldIndex.F42, "84316655812000A");
-        builder.setField(FieldIndex.F43, "河南省银隆信息技术有限公司");
-        builder.setField(FieldIndex.F44, "0309       4843       ");
-        builder.setField(FieldIndex.F49, "156");
-        builder.setField(FieldIndex.F53, "2400000000000000");
-        builder.setField(FieldIndex.F55, "9F260846FD62985CAAE7589F2701809F101307011703A00000010A0100000500001EF41C469F37049536C9B89F36020C66950500000000009A032208249C01009F02060000000011115F2A02015682027C009F1A0201569F03060000000000009F330360E9C89F34030000009F3501229F1E0831323334353637388408A0000003330101029F090200309F410400000001");
-        builder.setField(FieldIndex.F56, "00+成功");
-        builder.setField(FieldIndex.F59, "EF013368747470733A2F2F7061792E6B64622D746A2E636F6D2F68356D65726368616E74EF0218C9A8C2EBC8CFD6A4CCE1C9FDBDE1CBE3B6EE");
-        builder.setField(FieldIndex.F60, "22000727000600070");
-        builder.setField(FieldIndex.F64, "4246314136464335");
-        Message responseMessage = builder.build();
+        MessageEncoder encoder = new MessageEncoder(config);
+        encoder.setField(FieldIndex.TPDU, "6000030000");
+        encoder.setField(FieldIndex.HEAD, "603100310100");
+        encoder.setField(FieldIndex.MTI, "0210");
+        encoder.setField(FieldIndex.F2, "6224242300000069");
+        encoder.setField(FieldIndex.F3, "000000");
+        encoder.setField(FieldIndex.F4, "1111");
+        encoder.setField(FieldIndex.F11, "000079");
+        encoder.setField(FieldIndex.F12, "141556");
+        encoder.setField(FieldIndex.F13, "0824");
+        encoder.setField(FieldIndex.F14, "2903");
+        encoder.setField(FieldIndex.F23, "000");
+        encoder.setField(FieldIndex.F25, "00");
+        encoder.setField(FieldIndex.F26, "12");
+        encoder.setField(FieldIndex.F32, "48431665");
+        encoder.setField(FieldIndex.F37, "X00004002761");
+        encoder.setField(FieldIndex.F38, "650852");
+        encoder.setField(FieldIndex.F39, "00");
+        encoder.setField(FieldIndex.F41, "10016919");
+        encoder.setField(FieldIndex.F42, "84316655812000A");
+        encoder.setField(FieldIndex.F43, "河南省银隆信息技术有限公司");
+        encoder.setField(FieldIndex.F44, "0309       4843       ");
+        encoder.setField(FieldIndex.F49, "156");
+        encoder.setField(FieldIndex.F53, "2400000000000000");
+        encoder.setField(FieldIndex.F55, "9F260846FD62985CAAE7589F2701809F101307011703A00000010A0100000500001EF41C469F37049536C9B89F36020C66950500000000009A032208249C01009F02060000000011115F2A02015682027C009F1A0201569F03060000000000009F330360E9C89F34030000009F3501229F1E0831323334353637388408A0000003330101029F090200309F410400000001");
+        encoder.setField(FieldIndex.F56, "00+成功");
+        encoder.setField(FieldIndex.F59, "EF013368747470733A2F2F7061792E6B64622D746A2E636F6D2F68356D65726368616E74EF0218C9A8C2EBC8CFD6A4CCE1C9FDBDE1CBE3B6EE");
+        encoder.setField(FieldIndex.F60, "22000727000600070");
+        encoder.setField(FieldIndex.F64, "4246314136464335");
+        Message responseMessage = encoder.encode();
 
         System.out.println(responseMessage.toFormatString());
         String responseHex = responseMessage.getHexString();
         System.out.println(responseHex);
 
-        Message responseMessage2 = factory.parseWithMsgLength(responseHex);
+        MessageDecoder decoder = new MessageDecoder(config);
+        Message responseMessage2 = decoder.decodeWithMsgLength(responseHex);
 
         String responseHex2 = responseMessage2.getHexString();
         System.out.println(responseHex2);
@@ -212,11 +215,11 @@ public class PosMessageTest {
 
     @Test
     public void encodeEmptyMessage() {
-        MessageFactory factory = DefaultMessageFactory.produce();
-        factory.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
+        MessageConfig config = DefaultMessageConfig.produce();
+        config.set(new VariableFieldType(F59, LLLVAR, ASCII)); // 59域是TLV应该直接存HEX的，多转了一道
 
 //        Iso8583Message requestMessage = factory.parseWithoutMsgLength(PAY_REQUEST);
-        MessageBuilder builder = new MessageBuilder(factory);
+        MessageEncoder builder = new MessageEncoder(config);
         builder.setField(FieldIndex.TPDU, "");
         builder.setField(FieldIndex.HEAD, "");
         builder.setField(FieldIndex.MTI, "");
@@ -245,13 +248,14 @@ public class PosMessageTest {
         builder.setField(FieldIndex.F59, "");
         builder.setField(FieldIndex.F60, "");
         builder.setField(FieldIndex.F64, "");
-        Message responseMessage = builder.build();
+        Message responseMessage = builder.encode();
 
         System.out.println(responseMessage.toFormatString());
         String responseHex = responseMessage.getHexString();
         System.out.println(responseHex);
 
-        Message responseMessage2 = factory.parseWithMsgLength(responseHex);
+        MessageDecoder decoder = new MessageDecoder(config);
+        Message responseMessage2 = decoder.decodeWithMsgLength(responseHex);
 
         String responseHex2 = responseMessage2.getHexString();
         System.out.println(responseHex2);

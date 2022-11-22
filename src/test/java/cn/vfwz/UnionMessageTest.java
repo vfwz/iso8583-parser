@@ -1,8 +1,8 @@
 package cn.vfwz;
 
-import cn.vfwz.iso8583.message.DefaultMessageFactory;
+import cn.vfwz.iso8583.message.DefaultMessageConfig;
 import cn.vfwz.iso8583.message.Message;
-import cn.vfwz.iso8583.message.MessageFactory;
+import cn.vfwz.iso8583.message.MessageDecoder;
 import org.junit.Test;
 
 public class UnionMessageTest {
@@ -12,11 +12,11 @@ public class UnionMessageTest {
 
     @Test
     public void parsePayMessage() {
-        MessageFactory factory = DefaultMessageFactory.produceUnion();
+        MessageDecoder decoder = new MessageDecoder(DefaultMessageConfig.produceUnion());
 
-        Message requestMessage = factory.parse(PAY_REQUEST);
+        Message requestMessage = decoder.decode(PAY_REQUEST);
         System.out.println(requestMessage.toFormatString());
-        Message responseMessage = factory.parse(PAY_RESPONSE);
+        Message responseMessage = decoder.decode(PAY_RESPONSE);
         System.out.println(responseMessage.toFormatString());
     }
 

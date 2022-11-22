@@ -5,8 +5,9 @@ import cn.vfwz.iso8583.enumeration.FieldLengthType;
 import cn.vfwz.iso8583.enumeration.FieldValueType;
 import cn.vfwz.iso8583.enumeration.TlvType;
 import cn.vfwz.iso8583.exception.Iso8583Exception;
+import cn.vfwz.iso8583.message.FieldMessageConfig;
 import cn.vfwz.iso8583.message.Message;
-import cn.vfwz.iso8583.message.MessageFactory;
+import cn.vfwz.iso8583.message.MessageDecoder;
 import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +51,7 @@ public abstract class FieldType {
      */
     protected char padChar = '0';
 
-    protected MessageFactory subMessageFactory = null;
+    protected FieldMessageConfig fieldMessageConfig = null;
 
     /**
      * TLV域的类型格式，默认不是TLV格式
@@ -101,8 +102,7 @@ public abstract class FieldType {
             String valueHex = getValueHex(is, dataLength);
             String value = this.fieldValueType.decode(valueHex, dataLength, this.alignType, this.charset);
 
-            MessageFactory subMessageFactory = this.getSubMessageFactory();
-            if(subMessageFactory != null) {
+            if (this.getFieldMessageConfig() != null) {
                 log.debug("该域[{}]包含子域，初始化为SubField类型", fieldIndex);
                 return new SubField(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
             }
@@ -159,7 +159,7 @@ public abstract class FieldType {
      * @return 解析后的域
      */
     public Field encodeField(Message subMessage) {
-        if (this.subMessageFactory == null) {
+        if (this.fieldMessageConfig == null) {
             throw new Iso8583Exception("当前域值类型[" + this + "]没有配置子域格式");
         }
         if (subMessage == null) {
@@ -233,8 +233,12 @@ public abstract class FieldType {
         return bytes;
     }
 
-    public FieldType setSubMessageFactory(MessageFactory subMessageFactory) {
-        this.subMessageFactory = subMessageFactory;
+    public FieldMessageConfig getFieldMessageConfig() {
+        return fieldMessageConfig;
+    }
+
+    public FieldType setFieldMessageConfig(FieldMessageConfig fieldMessageConfig) {
+        this.fieldMessageConfig = fieldMessageConfig;
         return this;
     }
 
@@ -247,10 +251,6 @@ public abstract class FieldType {
         return fieldValueType;
     }
 
-    public MessageFactory getSubMessageFactory() {
-        return subMessageFactory;
-    }
-
     @Override
     public String toString() {
         return "FieldType{" +
@@ -260,7 +260,7 @@ public abstract class FieldType {
                 ", charset=" + charset +
                 ", alignType=" + alignType +
                 ", padChar=" + padChar +
-                ", subMessageFactory=" + subMessageFactory +
+                ", subMessageFactory=" + fieldMessageConfig +
                 ", tlvType=" + tlvType +
                 '}';
     }

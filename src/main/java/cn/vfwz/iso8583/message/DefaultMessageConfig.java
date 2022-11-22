@@ -11,13 +11,13 @@ import static cn.vfwz.iso8583.enumeration.FieldValueType.*;
 
 
 /**
- * 默认报文工厂
+ * 默认报文配置
  */
-public class DefaultMessageFactory {
+public class DefaultMessageConfig {
 
-    public static MessageFactory produce() {
-        MessageFactory factory = new MessageFactory();
-        factory.set(new FixedFieldType(TOTAL_MESSAGE_LENGTH, 2, HEX, AlignType.RIGHT))
+    public static MessageConfig produce() {
+        MessageConfig messageConfig = new MessageConfig();
+        messageConfig.set(new FixedFieldType(TOTAL_MESSAGE_LENGTH, 2, HEX, AlignType.RIGHT))
                 .set(new FixedFieldType(TPDU, 10, BCD))
                 .set(new FixedFieldType(HEAD, 12, BCD))
                 .set(new FixedFieldType(MTI, 4, BCD))
@@ -61,36 +61,14 @@ public class DefaultMessageFactory {
                 .set(new VariableFieldType(F62, LLLVAR, HEX))
                 .set(new VariableFieldType(F63, LLLVAR, HEX))
                 .set(new FixedFieldType(F64, 8, HEX));
-        return factory;
+
+        return messageConfig;
     }
 
-    public static MessageFactory produceUnion() {
-        MessageFactory factory = new MessageFactory(128);
-        /**
-         * 银联报文头的基本组成
-         * Field1 头长度（Header Length） 1
-         * Field2 头标识和版本号（Header Flag and Version） 1
-         * Field3 整个报文长度（Total Message Length） 4
-         * Field4 目的 ID（Destination ID） 11
-         * Field5 源 ID（Source ID） 11
-         * Field6 保留使用（Reserved for Use） 3
-         * Field7 批次号（Batch Number） 1
-         * Field8 交易信息（Transaction Information） 8
-         * Field9 用户信息（User Information） 1
-         * Field10 拒绝码（Reject Code） 5
-         * 2E
-         * 02
-         * 30333239
-         * 3438343330303030202020
-         * 3030303130303030202020
-         * 303030
-         * 01
-         * 3030303030303030
-         * 30
-         * 3030303030
-         */
+    public static MessageConfig produceUnion() {
+        MessageConfig messageConfig = new MessageConfig(128);
 
-        factory.set(new FixedFieldType(HEADER_LENGTH, 1, HEX))
+        messageConfig.set(new FixedFieldType(HEADER_LENGTH, 1, HEX))
                 .set(new FixedFieldType(HEADER_FLAG_AND_VERSION, 1, BCD))
                 .set(new FixedFieldType(TOTAL_MESSAGE_LENGTH, 4, ASCII))
                 .set(new FixedFieldType(DESTINATION_ID, 11, ASCII))
@@ -186,10 +164,11 @@ public class DefaultMessageFactory {
                 .set(new VariableFieldType(F125, LLLVAR_ASCII, ASCII))
                 .set(new VariableFieldType(F126, LLLVAR_ASCII, ASCII))
                 .set(new FixedFieldType(F128, 8, ASCII));
-        return factory;
+
+        return messageConfig;
     }
 
-    public static MessageFactory produce(int fieldsCount) {
+    public static MessageConfig produce(int fieldsCount) {
         // 64域POS报文
         if (fieldsCount == 64) {
             return produce();

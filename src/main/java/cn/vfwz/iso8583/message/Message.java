@@ -5,7 +5,6 @@ import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.FieldType;
 import cn.vfwz.iso8583.message.field.SubField;
 import cn.vfwz.iso8583.util.EncodeUtil;
-import cn.vfwz.iso8583.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
@@ -19,7 +18,7 @@ public class Message {
     /**
      * <p>自身所拥有的一个报文格式工厂</p>
      */
-    private final MessageFactory factory;
+    private final MessageConfig messageConfig;
     /**
      * <p>当前报文所对应的一个bitmap 64/128 域规范由本身持有的factory.isBit128()方法决定</p>
      */
@@ -30,12 +29,12 @@ public class Message {
      * <p>构造函数，需要一个Iso8583MessageFactory来约束报文解析规范</p>
      * 默认只能通过Builder创建Message，或者通过Factory解析得到
      */
-    protected Message(MessageFactory factory) {
-        if (null == factory) {
-            throw new NullPointerException("required param factory is null");
+    protected Message(MessageConfig messageConfig) {
+        if (null == messageConfig) {
+            throw new NullPointerException("required param messageConfig is null");
         }
-        this.factory = factory;
-        bitmap = new byte[factory.getFieldsCount()];
+        this.messageConfig = messageConfig;
+        bitmap = new byte[messageConfig.getFieldsCount()];
     }
 
     protected void setFields(Map<Integer, Field> fields) {
@@ -49,7 +48,7 @@ public class Message {
      * 更新指定域的值
      */
     public void updateValue(int index, String value) {
-        FieldType type = factory.getFieldType(index);
+        FieldType type = messageConfig.getFieldType(index);
         putField(type.encodeField(value));
         refresh();
     }
@@ -96,8 +95,8 @@ public class Message {
      */
     public String getBitmapBitString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < bitmap.length; i++) {
-            sb.append(bitmap[i]);
+        for (byte b : bitmap) {
+            sb.append(b);
         }
         return sb.toString();
     }
@@ -125,12 +124,12 @@ public class Message {
     private void refreshMsgLength() {
         int msgLength = 0;
         for (Field field : fields.values()) {
-            if (this.factory.getFieldsCount() != 128 && field.getIndex() == FieldIndex.TOTAL_MESSAGE_LENGTH) {
+            if (this.messageConfig.getFieldsCount() != 128 && field.getIndex() == FieldIndex.TOTAL_MESSAGE_LENGTH) {
                 continue;
             }
             msgLength += (field.getLengthHex().length() / 2 + field.getValueHex().length() / 2);
         }
-        FieldType fieldType = this.factory.getFieldTypeMute(FieldIndex.TOTAL_MESSAGE_LENGTH);
+        FieldType fieldType = this.messageConfig.getFieldTypeMute(FieldIndex.TOTAL_MESSAGE_LENGTH);
         if (fieldType == null) {
             log.debug("未配置messageLength域，无需刷新");
         } else {
@@ -149,7 +148,7 @@ public class Message {
             }
             bitmap[field.getIndex() - 1] = 1;
         }
-        FieldType fieldTypeMute = this.factory.getFieldTypeMute(FieldIndex.BITMAP);
+        FieldType fieldTypeMute = this.messageConfig.getFieldTypeMute(FieldIndex.BITMAP);
         if (fieldTypeMute == null) {
             log.debug("未配置bitmap域，无需刷新");
         } else {
@@ -171,8 +170,6 @@ public class Message {
      * <p>建议用于开发阶段调试，因为其打印内容未做掩码，为纯明文内容，不安全</p>
      *
      * @return String 格式化输出
-     * @Title: toFormatString
-     * @Description: 格式化消息输出
      */
     public String toFormatString() {
         StringBuilder sb = new StringBuilder();

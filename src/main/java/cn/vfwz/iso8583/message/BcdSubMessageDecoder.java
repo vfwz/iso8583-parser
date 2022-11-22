@@ -10,22 +10,16 @@ import java.util.Iterator;
 /**
  * BCD格式子域报文解析工厂
  */
-public class BcdSubMessageFactory extends MessageFactory {
-    public BcdSubMessageFactory() {
+public class BcdSubMessageDecoder extends MessageDecoder {
+
+    public BcdSubMessageDecoder(MessageConfig messageConfig) {
+        super(messageConfig);
     }
 
     @Override
-    public MessageFactory set(FieldType fieldType) {
-        if (fieldType.getFieldValueType() != FieldValueType.BCD) {
-            throw new Iso8583Exception("BcdSubMessageFactory的子域格式类型必须为" + FieldValueType.BCD);
-        }
-        return super.set(fieldType);
-    }
-
-    @Override
-    public Message parse(String data) {
-        MessageBuilder subMessageBuilder = new MessageBuilder(this);
-        Iterator<FieldType> fieldTypeIterator = super.getFieldTypeIterator();
+    public Message decode(String data) {
+        MessageEncoder subMessageEncoder = new MessageEncoder(this.getMessageConfig());
+        Iterator<FieldType> fieldTypeIterator = this.getMessageConfig().getFieldTypeIterator();
         int pos = 0;
         while (fieldTypeIterator.hasNext()) {
             FixedFieldType fieldType = (FixedFieldType) fieldTypeIterator.next();
@@ -34,9 +28,9 @@ public class BcdSubMessageFactory extends MessageFactory {
                 break;
             }
             String valueHex = data.substring(pos, end);
-            subMessageBuilder.setField(fieldType.decodeField(valueHex));
+            subMessageEncoder.setField(fieldType.decodeField(valueHex));
             pos = pos + fieldType.getDataLength();
         }
-        return subMessageBuilder.build();
+        return subMessageEncoder.encode();
     }
 }
