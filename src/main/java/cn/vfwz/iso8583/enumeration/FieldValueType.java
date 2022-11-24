@@ -43,7 +43,7 @@ public enum FieldValueType {
         if (data == null) {
             return data;
         }
-        int targetHexLength = getBytesCount(dataLength) * 2;
+        int targetHexLength = getHexCount(dataLength, alignType);
         String hexData = getHexData(data, charset);
 
         return pad(hexData, targetHexLength, alignType, padChar, charset);
@@ -124,25 +124,30 @@ public enum FieldValueType {
 
 
     /**
-     * 根据长度获得当前值类型所占字节数量
+     * 根据长度获得当前值类型所占hex字符数量
      *
      * @param valueLength 域值长度
+     * @param alignType
      * @return 字节数量
      */
-    public int getBytesCount(int valueLength) {
-        int bytesCount;
+    public int getHexCount(int valueLength, AlignType alignType) {
+        int hexCount;
         switch (this) {
             case BCD:
-                bytesCount = (valueLength + 1) / 2;
+                if (AlignType.NONE == alignType) {
+                    hexCount = valueLength;
+                } else {
+                    hexCount = (valueLength % 2 == 0) ? valueLength : (valueLength + 1);
+                }
                 break;
             case HEX:
             case ASCII:
-                bytesCount = valueLength;
+                hexCount = valueLength * 2;
                 break;
             default:
                 throw new Iso8583Exception("暂不支持的域值类型[" + this + "]");
         }
-        return bytesCount;
+        return hexCount;
     }
 
     /**

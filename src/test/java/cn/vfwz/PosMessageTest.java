@@ -1,6 +1,7 @@
 package cn.vfwz;
 
 import cn.vfwz.iso8583.constant.FieldIndex;
+import cn.vfwz.iso8583.enumeration.AlignType;
 import cn.vfwz.iso8583.message.*;
 import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.FixedFieldType;
@@ -11,9 +12,8 @@ import org.junit.Test;
 import java.util.Iterator;
 
 import static cn.vfwz.iso8583.constant.FieldIndex.*;
-import static cn.vfwz.iso8583.enumeration.FieldLengthType.LLLVAR;
-import static cn.vfwz.iso8583.enumeration.FieldValueType.ASCII;
-import static cn.vfwz.iso8583.enumeration.FieldValueType.BCD;
+import static cn.vfwz.iso8583.enumeration.FieldLengthType.*;
+import static cn.vfwz.iso8583.enumeration.FieldValueType.*;
 
 public class PosMessageTest {
 
@@ -99,21 +99,22 @@ public class PosMessageTest {
         MessageConfig config = DefaultMessageConfig.produce();
         // 2200072700060
 // ----------- 换一种实现思路
-//        BcdSubMessageDecoder decoder = new BcdSubMessageDecoder();
-//        decoder.set(new FixedFieldType(1, 2, BCD))
-//                .set(new FixedFieldType(2, 1, BCD))
-//                .set(new FixedFieldType(3, 1, BCD));
-//        config.getFieldType(F22).setSubMessageFactory(decoder);
-//
-//        BcdSubMessageDecoder f60SubMessageFactory = new BcdSubMessageDecoder();
-//        f60SubMessageFactory.set(new FixedFieldType(1, 1, BCD))
-//                .set(new FixedFieldType(2, 2, BCD))
-//                .set(new FixedFieldType(3, 3, BCD))
-//                .set(new FixedFieldType(4, 7, BCD).setSubMessageFactory(decoder));
-//        config.getFieldType(F60).setSubMessageFactory(f60SubMessageFactory);
-//
-//        Message message = config.decode(PAY_RESPONSE);
-//        System.out.println(message.toFormatString());
+        MessageConfig f22Config = new MessageConfig();
+        f22Config.set(new FixedFieldType(1, 2, BCD, AlignType.NONE))
+                .set(new FixedFieldType(2, 1, BCD, AlignType.NONE))
+                .set(new FixedFieldType(3, 8, BCD, AlignType.NONE));
+        config.getFieldType(F22).setFieldMessageConfig(f22Config);
+
+        MessageConfig f60Config = new MessageConfig();
+        f60Config.set(new FixedFieldType(1, 1, BCD, AlignType.NONE))
+                .set(new FixedFieldType(2, 2, BCD, AlignType.NONE))
+                .set(new FixedFieldType(3, 3, BCD, AlignType.NONE))
+                .set(new FixedFieldType(4, 7, BCD, AlignType.NONE).setFieldMessageConfig(f22Config));
+        config.getFieldType(F60).setFieldMessageConfig(f60Config);
+
+        MessageDecoder messageDecoder = new MessageDecoder(config);
+        Message message = messageDecoder.decode(PAY_RESPONSE);
+        System.out.println(message.toFormatString());
     }
 
     @Test

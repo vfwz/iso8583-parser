@@ -5,7 +5,7 @@ import cn.vfwz.iso8583.enumeration.FieldLengthType;
 import cn.vfwz.iso8583.enumeration.FieldValueType;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 
 /**
@@ -56,9 +56,9 @@ public class VariableFieldType extends FieldType {
     }
 
     @Override
-    protected int getValueLength(InputStream inputStream) {
-        byte[] lengthBytes = readBytes(inputStream, this.fieldLengthType.getBytesCount());
-        return this.fieldLengthType.decode(lengthBytes);
+    protected int getValueLength(Reader reader) {
+        String lengthHex = readHexChar(reader, this.fieldLengthType.getHexCount());
+        return this.fieldLengthType.decode(lengthHex);
     }
 
     @Override

@@ -3,7 +3,6 @@ package cn.vfwz.iso8583.message;
 import cn.vfwz.iso8583.constant.FieldIndex;
 import cn.vfwz.iso8583.message.field.Field;
 import cn.vfwz.iso8583.message.field.FieldType;
-import cn.vfwz.iso8583.message.field.SubField;
 import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +29,13 @@ public class Message {
      * 默认只能通过Builder创建Message，或者通过Factory解析得到
      */
     protected Message(MessageConfig messageConfig) {
-        if (null == messageConfig) {
-            throw new NullPointerException("required param messageConfig is null");
-        }
         this.messageConfig = messageConfig;
-        bitmap = new byte[messageConfig.getFieldsCount()];
+        FieldType bitmapFieldType = messageConfig.getFieldTypeMute(FieldIndex.BITMAP);
+        if (bitmapFieldType != null) {
+            bitmap = new byte[messageConfig.getFieldsCount()];
+        } else {
+            bitmap = new byte[0];
+        }
     }
 
     protected void setFields(Map<Integer, Field> fields) {
@@ -124,6 +125,7 @@ public class Message {
     private void refreshMsgLength() {
         int msgLength = 0;
         for (Field field : fields.values()) {
+            // 非银联报文长度域不包含在总长度中
             if (this.messageConfig.getFieldsCount() != 128 && field.getIndex() == FieldIndex.TOTAL_MESSAGE_LENGTH) {
                 continue;
             }
@@ -142,16 +144,16 @@ public class Message {
      * 当报文域发生变动时，需要刷新BitMap信息
      */
     private void refreshBitMap() {
-        for (Field field : fields.values()) {
-            if (field.getIndex() < 1) {
-                continue;
-            }
-            bitmap[field.getIndex() - 1] = 1;
-        }
         FieldType fieldTypeMute = this.messageConfig.getFieldTypeMute(FieldIndex.BITMAP);
         if (fieldTypeMute == null) {
             log.debug("未配置bitmap域，无需刷新");
         } else {
+            for (Field field : fields.values()) {
+                if (field.getIndex() < 1) {
+                    continue;
+                }
+                bitmap[field.getIndex() - 1] = 1;
+            }
             Field bitMapField = fieldTypeMute.encodeField(EncodeUtil.bytes2Hex(getBitmapBytes()));
             this.putField(bitMapField);
         }
@@ -173,21 +175,10 @@ public class Message {
      */
     public String toFormatString() {
         StringBuilder sb = new StringBuilder();
-        String format = "[F%s][%s][%s][%s][%s]";
+        String format = "[F%s][%s][%s][%s][%s]\n";
 
         for (Map.Entry<Integer, Field> entry : fields.entrySet()) {
-            Field field = entry.getValue();
-            FieldType fieldType = field.getFieldType();
-            sb.append(String.format(format, field.getIndexString(), fieldType.getFieldLengthType(), fieldType.getFieldValueType(), field.getLength(), field.getValue()));
-            sb.append("\n");
-            if (field instanceof SubField) {
-                SubField subField = (SubField)field;
-                subField.getSubFieldIterator().forEachRemaining(each -> {
-                    FieldType eachFieldType = each.getFieldType();
-                    sb.append(String.format(format, each.getIndexString(), eachFieldType.getFieldLengthType(), eachFieldType.getFieldValueType(), each.getLength(), each.getValue()));
-                });
-                sb.append("\n");
-            }
+            sb.append(entry.getValue().toFormatString());
         }
         return sb.toString();
     }
@@ -240,12 +231,12 @@ public class Message {
      * <p>获取校验域的字符串形式值</p>
      */
     public String getMacString() {
-        if(this.bitmap == null) {
+        if (this.bitmap == null) {
             return null;
         }
         // 拿最后一个域
         Field field = fields.get(this.bitmap.length);
-        return field == null? null: field.getValueHex();
+        return field == null ? null : field.getValueHex();
     }
 
     /**

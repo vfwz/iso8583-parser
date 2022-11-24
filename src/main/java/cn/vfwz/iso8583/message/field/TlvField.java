@@ -17,6 +17,4 @@ public class TlvField extends Field {
     }
 
 
-
-
 }

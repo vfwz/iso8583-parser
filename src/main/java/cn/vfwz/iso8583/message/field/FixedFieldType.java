@@ -4,7 +4,7 @@ import cn.vfwz.iso8583.enumeration.AlignType;
 import cn.vfwz.iso8583.enumeration.FieldLengthType;
 import cn.vfwz.iso8583.enumeration.FieldValueType;
 
-import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 
 /**
@@ -50,7 +50,7 @@ public class FixedFieldType extends FieldType {
     }
 
     @Override
-    protected int getValueLength(InputStream inputStream) {
+    protected int getValueLength(Reader reader) {
         return this.dataLength;
     }
 

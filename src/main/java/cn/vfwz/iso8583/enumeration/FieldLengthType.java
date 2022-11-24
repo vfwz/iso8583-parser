@@ -32,7 +32,7 @@ public enum FieldLengthType {
      */
     public String encode(int valueLength) {
         String lengthStr;
-        int lengthBytesCount = getBytesCount();
+        int hexCount = getHexCount();
         switch (this) {
             // 固定长度域无需长度部分
             case FIXED:
@@ -42,18 +42,18 @@ public enum FieldLengthType {
             case LLLVAR:
             case LLLLVAR:
                 lengthStr = Integer.toString(valueLength);
-                if ((lengthStr.length() + 1) / 2 > lengthBytesCount) {
+                if (lengthStr.length() > hexCount) {
                     throw new Iso8583Exception("当前值长度[" + lengthStr + "]超过当前长度类型[" + this + "]范围");
                 }
-                return StringUtil.leftPad(lengthStr, lengthBytesCount * 2, '0');
+                return StringUtil.leftPad(lengthStr, hexCount, '0');
             // ASCII编码
             case LLVAR_ASCII:
             case LLLVAR_ASCII:
                 lengthStr = Integer.toString(valueLength);
-                if (lengthStr.length() > lengthBytesCount) {
+                if (lengthStr.length() * 2 > hexCount) {
                     throw new Iso8583Exception("当前值长度[" + lengthStr + "]超过当前长度类型[" + this + "]范围");
                 }
-                lengthStr = StringUtil.leftPad(lengthStr, lengthBytesCount, '0');
+                lengthStr = StringUtil.leftPad(lengthStr, hexCount / 2, '0');
                 return EncodeUtil.bytes2Hex(lengthStr.getBytes(StandardCharsets.UTF_8));
             default:
                 throw new Iso8583Exception("暂不支持的长度类型[" + this + "]");
@@ -85,26 +85,26 @@ public enum FieldLengthType {
     /**
      * 获取当前长度类型占字节数量
      */
-    public int getBytesCount() {
+    public int getHexCount() {
         int lengthBytesCount;
         switch (this) {
             case FIXED:
                 lengthBytesCount = 0;
                 break;
             case LLVAR:
-                lengthBytesCount = 1;
+                lengthBytesCount = 2;
                 break;
             case LLLVAR:
-                lengthBytesCount = 2;
+                lengthBytesCount = 4;
                 break;
             case LLLLVAR:
-                lengthBytesCount = 3;
+                lengthBytesCount = 6;
                 break;
             case LLVAR_ASCII:
-                lengthBytesCount = 2;
+                lengthBytesCount = 4;
                 break;
             case LLLVAR_ASCII:
-                lengthBytesCount = 3;
+                lengthBytesCount = 6;
                 break;
             default:
                 throw new Iso8583Exception("暂不支持的域长类型[" + this + "]");

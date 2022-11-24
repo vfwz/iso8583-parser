@@ -5,14 +5,13 @@ import cn.vfwz.iso8583.enumeration.FieldLengthType;
 import cn.vfwz.iso8583.enumeration.FieldValueType;
 import cn.vfwz.iso8583.enumeration.TlvType;
 import cn.vfwz.iso8583.exception.Iso8583Exception;
-import cn.vfwz.iso8583.message.FieldMessageConfig;
 import cn.vfwz.iso8583.message.Message;
+import cn.vfwz.iso8583.message.MessageConfig;
 import cn.vfwz.iso8583.message.MessageDecoder;
-import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 
 /**
@@ -51,7 +50,7 @@ public abstract class FieldType {
      */
     protected char padChar = '0';
 
-    protected FieldMessageConfig fieldMessageConfig = null;
+    protected MessageConfig fieldMessageConfig = null;
 
     /**
      * TLV域的类型格式，默认不是TLV格式
@@ -92,22 +91,24 @@ public abstract class FieldType {
     /**
      * 使用当前域格式从流中解析域
      *
-     * @param is 输入的报文流
+     * @param reader 输入的报文流
      * @return 解析后的域
      */
-    public Field decodeField(InputStream is) {
+    public Field decodeField(Reader reader) {
         try {
-            int dataLength = getValueLength(is);
+            int dataLength = getValueLength(reader);
             String lengthHex = getLengthHex(dataLength);
-            String valueHex = getValueHex(is, dataLength);
+            String valueHex = getValueHex(reader, dataLength, this.alignType);
             String value = this.fieldValueType.decode(valueHex, dataLength, this.alignType, this.charset);
 
+            Message fieldMessage = null;
             if (this.getFieldMessageConfig() != null) {
-                log.debug("该域[{}]包含子域，初始化为SubField类型", fieldIndex);
-                return new SubField(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
+                log.debug("该域[{}]包含子域，根据配置进行解析", fieldIndex);
+                MessageDecoder fieldMessagDeocoder = new MessageDecoder(this.getFieldMessageConfig());
+                fieldMessage = fieldMessagDeocoder.decode(valueHex);
             }
 
-            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this);
+            return new Field(this.getFieldIndex(), dataLength, value, lengthHex, valueHex, this, fieldMessage);
         } catch (Exception e) {
             log.error("解析域[{}]失败", this.fieldIndex, e);
             throw new Iso8583Exception(e);
@@ -190,25 +191,24 @@ public abstract class FieldType {
     /**
      * 从流中获得当前域的长度
      *
-     * @param inputStream 报文流
+     * @param reader 报文流
      * @return 当前域值长度
      */
-    protected abstract int getValueLength(InputStream inputStream);
+    protected abstract int getValueLength(Reader reader);
 
     protected abstract String getLengthHex(int valueLength);
 
     /**
      * 从数据流中读取当前域值的Hex形式数据
      *
-     * @param inputStream 报文流
+     * @param reader      报文hex字符流
      * @param valueLength 域值的长度
+     * @param alignType
      * @return hex形式的域值
      */
-    protected String getValueHex(InputStream inputStream, int valueLength) {
-        int valueBytesCount = this.fieldValueType.getBytesCount(valueLength);
-        byte[] valueBytes = readBytes(inputStream, valueBytesCount);
-
-        return EncodeUtil.bytes2Hex(valueBytes);
+    protected String getValueHex(Reader reader, int valueLength, AlignType alignType) {
+        int hexCount = this.fieldValueType.getHexCount(valueLength, alignType);
+        return readHexChar(reader, hexCount);
     }
 
     /**
@@ -223,21 +223,28 @@ public abstract class FieldType {
         return fieldIndex;
     }
 
-    protected byte[] readBytes(InputStream is, int bytesLen) {
-        byte[] bytes = new byte[bytesLen];
+    /**
+     * 读取指定数量的hex字符
+     *
+     * @param reader 报文hex字符流
+     * @param count  读取数量
+     * @return hex串
+     */
+    protected String readHexChar(Reader reader, int count) {
+        char[] chars = new char[count];
         try {
-            int read = is.read(bytes);
+            int read = reader.read(chars);
         } catch (IOException e) {
             throw new Iso8583Exception("读取报文流失败", e);
         }
-        return bytes;
+        return new String(chars);
     }
 
-    public FieldMessageConfig getFieldMessageConfig() {
+    public MessageConfig getFieldMessageConfig() {
         return fieldMessageConfig;
     }
 
-    public FieldType setFieldMessageConfig(FieldMessageConfig fieldMessageConfig) {
+    public FieldType setFieldMessageConfig(MessageConfig fieldMessageConfig) {
         this.fieldMessageConfig = fieldMessageConfig;
         return this;
     }

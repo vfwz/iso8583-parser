@@ -15,8 +15,11 @@
  */
 package cn.vfwz.iso8583.message.field;
 
+import cn.vfwz.iso8583.message.Message;
 import cn.vfwz.iso8583.util.EncodeUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Iterator;
 
 /**
  * 8583报文域抽象，不可变类
@@ -24,15 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Field implements Comparable<Field> {
 
-    protected Field parentField;
     /**
      * 报文字段索引
      */
-    private final Integer index;
+    private final int index;
     /**
      * 数据长度
      */
-    private final Integer length;
+    private final int length;
     /**
      * 数据值
      */
@@ -45,11 +47,17 @@ public class Field implements Comparable<Field> {
      * hex格式的长度值
      */
     private final String lengthHex;
-
     /**
      * 报文格式类型
      */
     private final FieldType fieldType;
+
+    protected Field parentField;
+
+    /**
+     * 子域
+     */
+    protected Message fieldMessage;
 
 //    private final String tagName; // TLV格式域 tag信息
 //
@@ -66,14 +74,18 @@ public class Field implements Comparable<Field> {
         this.fieldType = fieldType;
     }
 
-    public Field(Field parentField, int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType) {
-        this.parentField = parentField;
+    public Field(int index, int length, String value, String lengthHex, String valueHex, FieldType fieldType, Message fieldMessage) {
+        this.parentField = null;
         this.index = index;
         this.length = length;
         this.value = value;
         this.lengthHex = lengthHex;
         this.valueHex = valueHex;
         this.fieldType = fieldType;
+        this.fieldMessage = fieldMessage;
+        if (fieldMessage != null) {
+            fieldMessage.getFieldIterator().forEachRemaining(field -> field.setParentField(this));
+        }
     }
 
     /**
@@ -147,6 +159,20 @@ public class Field implements Comparable<Field> {
                 ", lengthHex='" + lengthHex + '\'' +
                 ", fieldType=" + fieldType +
                 '}';
+    }
+
+    public String toFormatString() {
+        StringBuilder sb = new StringBuilder();
+        String format = "[F%s][%s][%s][%s][%s]\n";
+        sb.append(String.format(format, this.getIndexString(), fieldType.getFieldLengthType(), fieldType.getFieldValueType(), this.getLength(), this.getValue()));
+        if (this.fieldMessage != null) {
+            Iterator<Field> subField = this.fieldMessage.getFieldIterator();
+            while (subField.hasNext()) {
+                sb.append(" ");
+                sb.append(subField.next().toFormatString());
+            }
+        }
+        return sb.toString();
     }
 
     @Override

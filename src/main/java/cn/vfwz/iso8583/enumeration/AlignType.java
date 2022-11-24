@@ -50,7 +50,7 @@ public enum AlignType {
         }
         int valLen = value.length();
         String ret = value;
-        switch(this) {
+        switch (this) {
             case LEFT: // 左对齐，右边截取掉
                 ret = value.substring(0, targetLength);
                 break;

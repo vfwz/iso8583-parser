@@ -12,23 +12,22 @@ import java.util.TreeMap;
 public class MessageConfig {
 
 
-    // 报文域长度
-    private int fieldsCount = 64; // 默认64域报文
-
-    public MessageConfig() {
-
-    }
-
-
-    public MessageConfig(int fieldsCount) {
-        this.fieldsCount = fieldsCount;
-    }
-
     /**
      * <p>用于保存字段类型的集合</p>
      * <p>相当于是一个报文模板集合</p>
      */
     private final Map<Integer, FieldType> fieldTypeMap = new TreeMap<>();
+    // 报文域长度
+    private int fieldsCount = 64; // 默认64域报文
+
+
+    public MessageConfig() {
+
+    }
+
+    public MessageConfig(int fieldsCount) {
+        this.fieldsCount = fieldsCount;
+    }
 
     /**
      * <p>分别设置8583报文中各个字段域的消息数据格式</p>
