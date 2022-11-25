@@ -3,7 +3,6 @@ package cn.vfwz.iso8583.message.field;
 import cn.vfwz.iso8583.enumeration.AlignType;
 import cn.vfwz.iso8583.enumeration.FieldLengthType;
 import cn.vfwz.iso8583.enumeration.FieldValueType;
-import cn.vfwz.iso8583.enumeration.TlvType;
 import cn.vfwz.iso8583.exception.Iso8583Exception;
 import cn.vfwz.iso8583.message.Message;
 import cn.vfwz.iso8583.message.MessageConfig;
@@ -52,20 +51,11 @@ public abstract class FieldType {
 
     protected MessageConfig fieldMessageConfig = null;
 
-    /**
-     * TLV域的类型格式，默认不是TLV格式
-     */
-    protected TlvType tlvType = TlvType.NONE; // 默认不是TLV格式
 
     FieldType(int fieldIndex, FieldLengthType fieldLengthType, FieldValueType fieldValueType) {
         this.fieldIndex = fieldIndex;
         this.fieldLengthType = fieldLengthType;
         this.fieldValueType = fieldValueType;
-    }
-
-    FieldType(int fieldIndex, FieldLengthType fieldLengthType, FieldValueType fieldValueType, TlvType tlvType) {
-        this(fieldIndex, fieldLengthType, fieldValueType);
-        this.tlvType = tlvType;
     }
 
     FieldType(int fieldIndex, FieldLengthType fieldLengthType, FieldValueType fieldValueType, AlignType alignType) {
@@ -268,7 +258,6 @@ public abstract class FieldType {
                 ", alignType=" + alignType +
                 ", padChar=" + padChar +
                 ", subMessageFactory=" + fieldMessageConfig +
-                ", tlvType=" + tlvType +
                 '}';
     }
 }

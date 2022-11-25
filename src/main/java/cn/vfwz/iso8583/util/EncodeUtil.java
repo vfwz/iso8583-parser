@@ -103,4 +103,8 @@ public class EncodeUtil {
         return result;
     }
 
+    public static int byte2Int(byte b) {
+        return b & 0xFF;
+    }
+
 }
